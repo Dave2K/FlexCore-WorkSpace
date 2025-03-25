@@ -1,28 +1,27 @@
-﻿// File: Tests/FlexCore.Logging.SerilogTests/SerilogLoggerTests.cs
-using Xunit;
+﻿using Xunit;
 using FlexCore.Logging.Serilog;
-using FlexCore.Logging.Interfaces;
-using Serilog;
+using global::Serilog;
 using Serilog.Sinks.TestCorrelator;
 using System;
 using System.Linq;
-using Serilog.Events; // Aggiunto questo using
+using Serilog.Events;
+using FlexCore.Logging.Interfaces;
 
 namespace FlexCore.Logging.SerilogTests;
 
-/// <summary>
-/// Test per la classe <see cref="SerilogLogger"/>
-/// </summary>
 public class SerilogLoggerTests : IDisposable
 {
-    private readonly SerilogLogger _logger;
+    private readonly global::Serilog.ILogger _serilogLogger;
+    private readonly ILoggingProvider _logger;
 
     public SerilogLoggerTests()
     {
-        Log.Logger = new LoggerConfiguration()
+        _serilogLogger = new LoggerConfiguration()
+            .MinimumLevel.Is(LevelAlias.Minimum)
             .WriteTo.TestCorrelator()
             .CreateLogger();
 
+        Log.Logger = _serilogLogger;
         _logger = new SerilogLogger();
     }
 
@@ -38,9 +37,12 @@ public class SerilogLoggerTests : IDisposable
         using (TestCorrelator.CreateContext())
         {
             _logger.Debug("Test debug message");
-            Assert.Contains(TestCorrelator.GetLogEventsFromCurrentContext(),
-                le => le.MessageTemplate.Text == "Test debug message" &&
-                      le.Level == LogEventLevel.Debug); // Modificato qui
+
+            var events = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
+            Assert.NotEmpty(events);
+            Assert.Contains(events, e =>
+                e.MessageTemplate.Text == "Test debug message" &&
+                e.Level == LogEventLevel.Debug);
         }
     }
 
@@ -50,9 +52,12 @@ public class SerilogLoggerTests : IDisposable
         using (TestCorrelator.CreateContext())
         {
             _logger.Info("Test info message");
-            Assert.Contains(TestCorrelator.GetLogEventsFromCurrentContext(),
-                le => le.MessageTemplate.Text == "Test info message" &&
-                      le.Level == LogEventLevel.Information); // Modificato qui
+
+            var events = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
+            Assert.NotEmpty(events);
+            Assert.Contains(events, e =>
+                e.MessageTemplate.Text == "Test info message" &&
+                e.Level == LogEventLevel.Information);
         }
     }
 
@@ -62,9 +67,12 @@ public class SerilogLoggerTests : IDisposable
         using (TestCorrelator.CreateContext())
         {
             _logger.Warn("Test warn message");
-            Assert.Contains(TestCorrelator.GetLogEventsFromCurrentContext(),
-                le => le.MessageTemplate.Text == "Test warn message" &&
-                      le.Level == LogEventLevel.Warning); // Modificato qui
+
+            var events = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
+            Assert.NotEmpty(events);
+            Assert.Contains(events, e =>
+                e.MessageTemplate.Text == "Test warn message" &&
+                e.Level == LogEventLevel.Warning);
         }
     }
 
@@ -74,9 +82,12 @@ public class SerilogLoggerTests : IDisposable
         using (TestCorrelator.CreateContext())
         {
             _logger.Error("Test error message");
-            Assert.Contains(TestCorrelator.GetLogEventsFromCurrentContext(),
-                le => le.MessageTemplate.Text == "Test error message" &&
-                      le.Level == LogEventLevel.Error); // Modificato qui
+
+            var events = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
+            Assert.NotEmpty(events);
+            Assert.Contains(events, e =>
+                e.MessageTemplate.Text == "Test error message" &&
+                e.Level == LogEventLevel.Error);
         }
     }
 
@@ -86,15 +97,18 @@ public class SerilogLoggerTests : IDisposable
         using (TestCorrelator.CreateContext())
         {
             _logger.Fatal("Test fatal message");
-            Assert.Contains(TestCorrelator.GetLogEventsFromCurrentContext(),
-                le => le.MessageTemplate.Text == "Test fatal message" &&
-                      le.Level == LogEventLevel.Fatal); // Modificato qui
+
+            var events = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
+            Assert.NotEmpty(events);
+            Assert.Contains(events, e =>
+                e.MessageTemplate.Text == "Test fatal message" &&
+                e.Level == LogEventLevel.Fatal);
         }
     }
 
     [Fact]
     public void ShouldImplementILoggingProvider()
     {
-        Assert.IsType<SerilogLogger>(_logger);
+        Assert.IsAssignableFrom<ILoggingProvider>(_logger);
     }
 }
