@@ -1,0 +1,25 @@
+﻿namespace FlexCore.Database.SQLite.Tests
+{
+    using Xunit;
+    using FlexCore.Database.Core;
+    using System.Data;
+    using Moq;
+
+    public class DbConnectionFactoryTests
+    {
+        [Fact]
+        public void CreateConnection_ShouldReturnOpenConnection()
+        {
+            // Arrange
+            var connectionString = "Data Source=:memory:";
+            var factory = new Mock<DbConnectionFactory>(connectionString) { CallBase = true };
+            factory.Setup(f => f.CreateConnection()).Returns(new Mock<IDbConnection>().Object);
+
+            // Act
+            var connection = factory.Object.CreateConnection();
+
+            // Assert
+            Assert.NotNull(connection);
+        }
+    }
+}

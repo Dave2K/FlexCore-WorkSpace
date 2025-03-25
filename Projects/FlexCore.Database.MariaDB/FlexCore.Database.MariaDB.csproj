@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <Version>0.1.0</Version>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>FlexCore.Database.MariaDB</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FlexCore.Database.Core\FlexCore.Database.Core.csproj" />
+  </ItemGroup>
+</Project>
