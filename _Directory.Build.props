@@ -1,7 +1,0 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <OutputPath>$(MSBuildThisFileDirectory)_artifacts\bin\$(Configuration)\</OutputPath>
-    <BaseOutputPath>$(MSBuildThisFileDirectory)_artifacts\obj\$(Configuration)\</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)_artifacts\obj\$(Configuration)\</BaseIntermediateOutputPath>
-  </PropertyGroup>
-</Project>
