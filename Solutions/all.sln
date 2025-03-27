@@ -136,6 +136,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Caching", "Caching", "{7B07B7C3-9509-47BF-ACA9-E6BD82FD40E7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projects", "Projects", "{48B8C347-B383-47F7-8216-56AFB3CE0962}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
+		..\Directory.Build.props = ..\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{B96B327A-7BA5-461B-B35D-5B1EFAEADA96}"
 EndProject
@@ -150,6 +154,19 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{7BEB06B9-8E76-4CAE-8A65-B562B3907E02}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Caching", "Caching", "{A671E38D-1C7E-4BE9-A940-41C3F6FC8C16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Security", "Security", "{6C83A596-D32D-B35F-00DD-F0C99B673980}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Security.Identity.Models", "..\Projects\Libraries\Security\FlexCore.Security.Identity.Models\FlexCore.Security.Identity.Models.csproj", "{33B202D7-4334-45EE-8374-FA69C2FFF2D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Security.Identity.Services", "..\Projects\Libraries\Security\FlexCore.Security.Identity.Services\FlexCore.Security.Identity.Services.csproj", "{06417E77-BDA2-439F-967E-64FF08141F84}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Varie", "_Varie", "{E72FEF59-8741-4AA9-BDAB-5B7DF2C3206B}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
+		..\Directory.Build.props = ..\Directory.Build.props
+		..\Documents\memo.txt = ..\Documents\memo.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -389,6 +406,14 @@ Global
 		{A6F3896E-21BF-4862-AB7C-6801287FFF19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A6F3896E-21BF-4862-AB7C-6801287FFF19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A6F3896E-21BF-4862-AB7C-6801287FFF19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33B202D7-4334-45EE-8374-FA69C2FFF2D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33B202D7-4334-45EE-8374-FA69C2FFF2D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33B202D7-4334-45EE-8374-FA69C2FFF2D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33B202D7-4334-45EE-8374-FA69C2FFF2D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06417E77-BDA2-439F-967E-64FF08141F84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06417E77-BDA2-439F-967E-64FF08141F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06417E77-BDA2-439F-967E-64FF08141F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06417E77-BDA2-439F-967E-64FF08141F84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -466,5 +491,11 @@ Global
 		{81A6F2A5-AA3F-417F-BBE3-C6353CC18548} = {B96B327A-7BA5-461B-B35D-5B1EFAEADA96}
 		{7BEB06B9-8E76-4CAE-8A65-B562B3907E02} = {B96B327A-7BA5-461B-B35D-5B1EFAEADA96}
 		{A671E38D-1C7E-4BE9-A940-41C3F6FC8C16} = {B96B327A-7BA5-461B-B35D-5B1EFAEADA96}
+		{6C83A596-D32D-B35F-00DD-F0C99B673980} = {B96B327A-7BA5-461B-B35D-5B1EFAEADA96}
+		{33B202D7-4334-45EE-8374-FA69C2FFF2D9} = {6C83A596-D32D-B35F-00DD-F0C99B673980}
+		{06417E77-BDA2-439F-967E-64FF08141F84} = {6C83A596-D32D-B35F-00DD-F0C99B673980}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5D75F05F-2182-46C8-B043-72ACD0DE4F5B}
 	EndGlobalSection
 EndGlobal
