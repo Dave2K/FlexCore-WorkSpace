@@ -1,3 +1,6 @@
+di tanti in tanto appare un folder in sources con nome FlexCoreWorkspace
+
+
 namespace FlexCore.Security.Identity.Models
 {
     public class JwtSettings

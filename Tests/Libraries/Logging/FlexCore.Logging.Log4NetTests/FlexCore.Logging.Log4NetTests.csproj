@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -17,6 +17,5 @@
 
 	<ItemGroup>
 		<ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Log4Net/FlexCore.Logging.Log4Net.csproj" />
-		<ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Interfaces/FlexCore.Logging.Interfaces.csproj" />
 	</ItemGroup>
 </Project>

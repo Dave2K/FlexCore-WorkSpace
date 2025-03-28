@@ -1,5 +1,7 @@
 ﻿using Xunit;
-using FlexCore.Caching.Exceptions;
+using FlexCore.Caching.Common.Exceptions;
+
+namespace FlexCore.Caching.Common.Tests;
 
 public class CacheExceptionTests
 {

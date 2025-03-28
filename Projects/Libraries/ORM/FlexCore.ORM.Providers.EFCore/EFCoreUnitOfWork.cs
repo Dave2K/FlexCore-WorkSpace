@@ -1,8 +1,8 @@
 ﻿namespace FlexCore.ORM.Providers.EFCore;
 
 using Microsoft.EntityFrameworkCore;
-using FlexCore.ORM.Core;
 using System.Threading.Tasks;
+using FlexCore.ORM.Core.Implementations;
 
 /// <summary>
 /// Implementazione di UnitOfWork per EF Core. Gestisce la transazione e il salvataggio delle modifiche utilizzando Entity Framework Core.

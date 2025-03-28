@@ -9,7 +9,6 @@
 	  <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FlexCore.ORM.Core.Interfaces\FlexCore.ORM.Core.Interfaces.csproj" />
 	  <ProjectReference Include="..\FlexCore.ORM.Core\FlexCore.ORM.Core.csproj" />
 	</ItemGroup>
 </Project>

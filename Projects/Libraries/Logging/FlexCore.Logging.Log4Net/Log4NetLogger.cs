@@ -1,6 +1,6 @@
 ﻿namespace FlexCore.Logging.Log4Net;
 
-using FlexCore.Logging.Core;
+using FleFlexCore.Logging.Core.Base;
 using FlexCore.Logging.Interfaces;
 using log4net;
 

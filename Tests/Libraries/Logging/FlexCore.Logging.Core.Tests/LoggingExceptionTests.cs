@@ -1,6 +1,7 @@
 // File: Tests/FlexCore.Logging.Core.Tests/LoggingExceptionTests.cs
 using Xunit;
 using System;
+using FleFlexCore.Logging.Core.Exceptions;
 
 namespace FlexCore.Logging.Core.Tests;
 

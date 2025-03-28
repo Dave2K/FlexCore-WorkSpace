@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.3" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.Data.SQLite" Version="1.0.119" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.3" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\Projects\Libraries\ORM\FlexCore.ORM.Core\FlexCore.ORM.Core.csproj" />
+	  <ProjectReference Include="..\..\..\..\Projects\Libraries\ORM\FlexCore.ORM.Providers.ADO\FlexCore.ORM.Providers.ADO.csproj" />
+	</ItemGroup>
+</Project>

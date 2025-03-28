@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -29,8 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Core/FlexCore.Logging.Core.csproj" />
     <ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Factory/FlexCore.Logging.Factory.csproj" />
-    <ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Interfaces/FlexCore.Logging.Interfaces.csproj" />
-    <ProjectReference Include="../../../../Projects/Libraries/Core/FlexCore.Core.Configuration.Models/FlexCore.Core.Configuration.Models.csproj" />
+    <ProjectReference Include="..\..\..\..\Projects\Libraries\Core\FlexCore.Core.Configuration\FlexCore.Core.Configuration.csproj" />
 	</ItemGroup>
 
 </Project>

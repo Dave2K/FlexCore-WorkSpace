@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -26,7 +26,6 @@
   <ItemGroup>
     <ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.Core/FlexCore.Database.Core.csproj" />
     <ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.Factory/FlexCore.Database.Factory.csproj" />
-    <ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.Interfaces/FlexCore.Database.Interfaces.csproj" />
     <ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.SQLServer/FlexCore.Database.SQLServer.csproj" />
   </ItemGroup>
 

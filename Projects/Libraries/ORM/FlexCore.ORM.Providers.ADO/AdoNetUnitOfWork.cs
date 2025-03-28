@@ -3,7 +3,7 @@
 using System;
 using System.Data;
 using System.Threading.Tasks;
-using FlexCore.ORM.Core;
+using FlexCore.ORM.Core.Implementations;
 
 /// <summary>
 /// Implementa il pattern UnitOfWork utilizzando ADO.NET per la gestione delle transazioni.

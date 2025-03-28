@@ -8,8 +8,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FlexCore.Caching.Handlers\FlexCore.Caching.Handlers.csproj" />
+	  <ProjectReference Include="..\FlexCore.Caching.Common\FlexCore.Caching.Common.csproj" />
 	  <ProjectReference Include="..\FlexCore.Caching.Interfaces\FlexCore.Caching.Interfaces.csproj" />
-	  <ProjectReference Include="..\FlexCore.Caching.Validators\FlexCore.Caching.Validators.csproj" />
 	</ItemGroup>
 </Project>

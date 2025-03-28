@@ -1,6 +1,6 @@
 ﻿namespace FlexCore.Logging.Console;
 
-using FlexCore.Logging.Core;
+using FleFlexCore.Logging.Core.Base;
 using FlexCore.Logging.Interfaces;
 
 /// <summary>

@@ -9,6 +9,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FlexCore.Database.Interfaces\FlexCore.Database.Interfaces.csproj" />
+    <ProjectReference Include="..\FlexCore.Database.Core\FlexCore.Database.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -11,6 +11,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FlexCore.Logging.Interfaces\FlexCore.Logging.Interfaces.csproj" />
+    <ProjectReference Include="..\FlexCore.Logging.Core\FlexCore.Logging.Core.csproj" />
   </ItemGroup>
 </Project>

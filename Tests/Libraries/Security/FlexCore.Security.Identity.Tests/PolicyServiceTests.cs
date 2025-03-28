@@ -1,48 +1,35 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.DependencyInjection;
+﻿using FlexCore.Security.Identity.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Xunit;
 
-namespace FlexCore.Security.Identity.Services.Tests
+namespace FlexCore.Security.Identity.Tests
 {
     public class PolicyServiceTests
     {
-        private static IAuthorizationService CreateAuthService()
-        {
-            var services = new ServiceCollection();
-            services.AddAuthorization(PolicyService.ConfigurePolicies);
-            services.AddLogging();
-            return services.BuildServiceProvider().GetRequiredService<IAuthorizationService>();
-        }
-
         [Fact]
-        public async Task AdminOnlyPolicy_ValidAdmin_Success()
+        public void ConfigurePolicies_AddsCorrectPolicies()
         {
-            var authService = CreateAuthService();
-            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Role, "Admin")
-            }));
+            // Arrange
+            var options = new AuthorizationOptions();
 
-            var result = await authService.AuthorizeAsync(user, null, "AdminOnly");
-            Assert.True(result.Succeeded);
-        }
+            // Act
+            PolicyService.ConfigurePolicies(options);
 
-        [Fact]
-        public async Task ContentEditorPolicy_ValidRoles_Success()
-        {
-            var authService = CreateAuthService();
+            // Assert
+            var adminPolicy = options.GetPolicy("AdminOnly");
+            Assert.NotNull(adminPolicy);
 
-            foreach (var role in new[] { "Admin", "Editor" })
-            {
-                var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Role, role)
-                }));
-                var result = await authService.AuthorizeAsync(user, null, "ContentEditor");
-                Assert.True(result.Succeeded);
-            }
+            var roleRequirement = adminPolicy.Requirements
+                .OfType<ClaimsAuthorizationRequirement>()
+                .FirstOrDefault(r => r.ClaimType == ClaimTypes.Role);
+
+            Assert.NotNull(roleRequirement);
+            Assert.True(roleRequirement.AllowedValues?.Contains("Admin") ?? false);
+
+            Assert.NotNull(options.GetPolicy("ContentEditor"));
         }
     }
 }

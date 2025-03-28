@@ -1,8 +1,8 @@
 ﻿namespace FlexCore.Caching.Core;
 
-using FlexCore.Caching.Handlers;
+using FlexCore.Caching.Common.Handlers;
+using FlexCore.Caching.Common.Validators;
 using FlexCore.Caching.Interfaces;
-using FlexCore.Caching.Validators;
 using System;
 
 /// <summary>

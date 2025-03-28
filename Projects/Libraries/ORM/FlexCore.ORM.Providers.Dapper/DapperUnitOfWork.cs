@@ -1,9 +1,9 @@
 ﻿namespace FlexCore.ORM.Providers.Dapper;
 
 using System.Data;
-using FlexCore.ORM.Core;
 using System.Threading.Tasks;
 using System;
+using FlexCore.ORM.Core.Implementations;
 
 /// <summary>
 /// Implementazione del UnitOfWork per Dapper. Gestisce le transazioni e l'accesso al database tramite Dapper.

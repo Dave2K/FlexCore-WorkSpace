@@ -9,6 +9,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\FlexCore.Logging.Core\FlexCore.Logging.Core.csproj" />
-    <ProjectReference Include="..\FlexCore.Logging.Interfaces\FlexCore.Logging.Interfaces.csproj" />
   </ItemGroup>
 </Project>

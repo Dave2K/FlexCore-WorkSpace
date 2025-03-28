@@ -1,0 +1,24 @@
+﻿<!-- FlexCore.ORM.Providers.Dapper.Tests.csproj -->
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.3" />
+		<PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Projects\Libraries\ORM\FlexCore.ORM.Providers.Dapper\FlexCore.ORM.Providers.Dapper.csproj" />
+	</ItemGroup>
+</Project>

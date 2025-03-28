@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	  <OutputType>Library</OutputType>
@@ -10,6 +10,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Core/FlexCore.Core.Utilities/FlexCore.Core.Utilities.csproj" />
-    <ProjectReference Include="../FlexCore.Logging.Interfaces/FlexCore.Logging.Interfaces.csproj" />
   </ItemGroup>
 </Project>

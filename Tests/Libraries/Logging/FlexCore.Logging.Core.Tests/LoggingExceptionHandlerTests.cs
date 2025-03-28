@@ -1,6 +1,7 @@
 ﻿using Xunit;
-using FlexCore.Logging.Core;
 using System;
+using FleFlexCore.Logging.Core.Base;
+using FleFlexCore.Logging.Core.Exceptions;
 
 namespace FlexCore.Logging.Core.Tests;
 
