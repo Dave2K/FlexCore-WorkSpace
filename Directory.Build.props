@@ -1,22 +1,24 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <!-- Configurazione base -->
-    <WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
-    <OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
-    <BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
-    
-    <!-- Pulizia automatica -->
-    <CleanFile>$(MSBuildProjectFile).FileListAbsolute.txt</CleanFile>
-    <EnsureCleanBuild>true</EnsureCleanBuild>
-  </PropertyGroup>
+	<PropertyGroup>
+		<WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
+		<WorkSpaceResourcesFolder>$(WorkSpaceFolder)\Resources</WorkSpaceResourcesFolder>
 
-  <!-- Target per pulizia avanzata -->
-  <Target Name="SuperClean" AfterTargets="Clean">
-    <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
-    <RemoveDir Directories="$(OutputPath)" />
-    <!-- Elimina le cartelle obj/bin legacy -->
-    <RemoveDir Directories="$(ProjectDir)bin" Condition="Exists('$(ProjectDir)bin')" />
-    <RemoveDir Directories="$(ProjectDir)obj" Condition="Exists('$(ProjectDir)obj')" />
-  </Target>
+		<OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
+		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
+		<CleanFile>$(MSBuildProjectFile).FileListAbsolute.txt</CleanFile>
+		<EnsureCleanBuild>true</EnsureCleanBuild>
+	</PropertyGroup>
+
+	<!--<Target Name="SuperClean" AfterTargets="Clean">
+		<RemoveDir Directories="$(BaseIntermediateOutputPath)" />
+		<RemoveDir Directories="$(OutputPath)" />
+		<RemoveDir Directories="$(ProjectDir)bin" Condition="Exists('$(ProjectDir)bin')" />
+		<RemoveDir Directories="$(ProjectDir)obj" Condition="Exists('$(ProjectDir)obj')" />
+	</Target>-->
+
+	<!-- Imposta la variabile d'ambiente RESOURCES_FOLDER per il processo di build -->
+	<Target Name="SetResourcesFolderEnv" BeforeTargets="Build" Condition=" '$(OS)' == 'Windows_NT' ">
+		<Exec Command="cmd /c setx RESOURCES_FOLDER &quot;$(WorkSpaceResourcesFolder)&quot; /M" />
+	</Target>
 </Project>
