@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
-		<WorkSpaceResourcesFolder>$(WorkSpaceFolder)\Resources</WorkSpaceResourcesFolder>
+		<WorkSpaceResourcesFolder>$(WorkSpaceFolder)Resources\</WorkSpaceResourcesFolder>
 
 		<OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
 		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
@@ -16,7 +16,7 @@
 			<BuildConfigFilePath>$(IntermediateOutputPath)BuildConfig.g.cs</BuildConfigFilePath>
 			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
 			<!-- Percorso ASSOLUTO del template (modifica se necessario) -->
-			<BuildConfigTemplatePath>$(WorkSpaceFolder)BuildConfig.template.cs</BuildConfigTemplatePath>
+			<BuildConfigTemplatePath>$(WorkSpaceResourcesFolder)BuildConfig.template.cs</BuildConfigTemplatePath>
 		</PropertyGroup>
 
 		<!-- Leggi il template -->
