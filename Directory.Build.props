@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
 		<WorkSpaceResourcesFolder>$(WorkSpaceFolder)Resources\</WorkSpaceResourcesFolder>
+		<WorkSpaceTempsFolder>$(WorkSpaceFolder)Temps\</WorkSpaceTempsFolder>
 
 		<OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
 		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
@@ -14,8 +15,10 @@
 	<Target Name="GenerateBuildConfig" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateBuildConfig)' == 'true'">
 		<PropertyGroup>
 			<BuildConfigFilePath>$(IntermediateOutputPath)BuildConfig.g.cs</BuildConfigFilePath>
+
 			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
-			<!-- Percorso ASSOLUTO del template (modifica se necessario) -->
+			<EscapedTempsPath>$([System.String]::Copy('$(WorkSpaceTempsFolder)').Replace('\', '\\'))</EscapedTempsPath>
+
 			<BuildConfigTemplatePath>$(WorkSpaceResourcesFolder)BuildConfig.template.cs</BuildConfigTemplatePath>
 		</PropertyGroup>
 
@@ -27,6 +30,7 @@
 		<!-- Sostituisci il segnaposto -->
 		<ItemGroup>
 			<ReplacedLines Include="@(TemplateLines->Replace('$ResourcesPath$', '$(EscapedResourcesPath)'))" />
+			<!--<ReplacedLines Include="@(TemplateLines->Replace('$TempsPath$', '$(EscapedTempsPath)'))" />-->
 		</ItemGroup>
 
 		<!-- Genera il file finale -->

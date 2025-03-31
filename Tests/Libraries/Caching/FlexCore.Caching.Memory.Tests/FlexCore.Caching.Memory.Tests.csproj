@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../../Projects/Libraries/Caching/FlexCore.Caching.Memory/FlexCore.Caching.Memory.csproj" />
+    <ProjectReference Include="..\..\..\..\Projects\Libraries\Caching\FlexCore.Caching.Memory\FlexCore.Caching.Memory.csproj" />
   </ItemGroup>
 
   <ItemGroup>

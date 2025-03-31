@@ -8,6 +8,16 @@ using System.Collections.Generic;
 public class LoggingSettings
 {
     /// <summary>
+    /// Provider predefinito.
+    /// </summary>
+    public required string DefaultProvider { get; set; }
+
+    /// <summary>
+    /// Lista dei provider di logging supportati.
+    /// </summary>
+    public List<string> Providers { get; set; } = new List<string>();
+
+    /// <summary>
     /// Abilita il logging.
     /// </summary>
     public required bool Enabled { get; set; }
@@ -16,11 +26,6 @@ public class LoggingSettings
     /// Livello di logging (Trace, Debug, Information, Warning, Error, Critical).
     /// </summary>
     public required string Level { get; set; }
-
-    /// <summary>
-    /// Lista dei provider di logging supportati.
-    /// </summary>
-    public List<string> Providers { get; set; } = new List<string>();
 
     /// <summary>
     /// Impostazioni specifiche per il logging su console.

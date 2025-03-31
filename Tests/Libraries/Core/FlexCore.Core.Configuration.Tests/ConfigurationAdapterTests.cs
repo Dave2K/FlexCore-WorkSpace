@@ -254,7 +254,7 @@ namespace FlexCore.Core.Configuration.Tests
             Assert.NotNull(result.DatabaseSettings);
             Assert.NotNull(result.ORMSettings);
             Assert.NotNull(result.CacheSettings);
-            Assert.NotNull(result.Logging);
+            Assert.NotNull(result.LoggingSettings);
         }
     }
 }

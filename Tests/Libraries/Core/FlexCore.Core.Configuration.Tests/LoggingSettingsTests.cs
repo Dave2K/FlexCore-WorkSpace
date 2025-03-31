@@ -10,6 +10,7 @@ public class LoggingSettingsTests
     {
         var settings = new LoggingSettings
         {
+            DefaultProvider = "Console",
             Enabled = true,
             Level = "Information",
             Console = new ConsoleLoggingSettings { IncludeScopes = false, LogLevel = new LogLevelSettings { Default = "Warning", System = "Error", Microsoft = "Error" } },

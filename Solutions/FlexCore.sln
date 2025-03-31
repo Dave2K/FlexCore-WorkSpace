@@ -125,6 +125,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Varie", "_Varie", "{E72FEF
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
 		..\Resources\appsettings.json = ..\Resources\appsettings.json
+		..\Resources\BuildConfig.template.cs = ..\Resources\BuildConfig.template.cs
 		..\Directory.Build.props = ..\Directory.Build.props
 		..\Documents\memo.txt = ..\Documents\memo.txt
 	EndProjectSection

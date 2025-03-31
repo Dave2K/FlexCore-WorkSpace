@@ -17,6 +17,7 @@ namespace FlexCore.Logging.Core.Tests
         {
             var settings = new LoggingSettings
             {
+                DefaultProvider = "Console",
                 Enabled = true,
                 Level = "Information",
                 Console = new ConsoleLoggingSettings
@@ -64,6 +65,7 @@ namespace FlexCore.Logging.Core.Tests
         {
             var settings = new LoggingSettings
             {
+                DefaultProvider = "Console",
                 Enabled = false,
                 Level = "Debug",
                 Console = new ConsoleLoggingSettings

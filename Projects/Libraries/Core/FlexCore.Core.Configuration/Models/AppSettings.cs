@@ -28,5 +28,5 @@ public class AppSettings
     /// <summary>
     /// Impostazioni di logging.
     /// </summary>
-    public required LoggingSettings Logging { get; set; }
+    public required LoggingSettings LoggingSettings { get; set; }
 }
