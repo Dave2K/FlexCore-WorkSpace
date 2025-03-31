@@ -1,6 +1,6 @@
 using FlexCore.Core.Configuration.Models;
 
-namespace FlexCore.Core.Configuration;
+namespace FlexCore.Core.Configuration.Interface;
 
 /// <summary>
 /// Interfaccia per l'accesso alle configurazioni dell'applicazione.
@@ -23,38 +23,37 @@ public interface IAppConfiguration
     T? GetValue<T>(string key);
 
     /// <summary>
-    /// Ottiene le impostazioni dell'applicazione.
+    /// Ottiene le impostazioni globali dell'applicazione.
     /// </summary>
     /// <returns>Le impostazioni dell'applicazione.</returns>
     AppSettings GetAppSettings();
 
     /// <summary>
-    /// Ottiene le impostazioni delle stringhe di connessione.
+    /// Ottiene le impostazioni di configurazione dei database.
     /// </summary>
-    /// <returns>Le impostazioni delle stringhe di connessione.</returns>
-    ConnectionStringsSettings GetConnectionStrings();
-
-    /// <summary>
-    /// Ottiene le impostazioni del database.
-    /// </summary>
-    /// <returns>Le impostazioni del database.</returns>
+    /// <returns>Provider, connessioni e parametri dei database.</returns>
     DatabaseSettings GetDatabaseSettings();
 
     /// <summary>
-    /// Ottiene le impostazioni ORM.
+    /// Ottiene le impostazioni per i provider ORM (EFCore, Dapper, ADO.NET).
     /// </summary>
     /// <returns>Le impostazioni ORM.</returns>
     ORMSettings GetORMSettings();
 
     /// <summary>
-    /// Ottiene le impostazioni della cache.
+    /// Ottiene le impostazioni per i provider di cache (Redis, MemoryCache).
     /// </summary>
     /// <returns>Le impostazioni della cache.</returns>
     CacheSettings GetCacheSettings();
 
     /// <summary>
-    /// Ottiene le impostazioni di logging.
+    /// Ottiene le impostazioni di logging (Console, Log4Net, Serilog).
     /// </summary>
     /// <returns>Le impostazioni di logging.</returns>
     LoggingSettings GetLoggingSettings();
+
+    /// <summary>
+    /// Ottiene le impostazioni di sicurezza (JWT, OAuth).
+    /// </summary>
+    SecuritySettings GetSecuritySettings();
 }

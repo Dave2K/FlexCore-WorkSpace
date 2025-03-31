@@ -1,96 +1,62 @@
-﻿namespace FlexCore.Core.Configuration.Extensions;
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using FlexCore.Core.Configuration.Models;
 
-/// <summary>
-/// Estensioni per la configurazione dei servizi.
-/// </summary>
+namespace FlexCore.Core.Configuration.Extensions;
+
 public static class ServiceCollectionExtensions
 {
-    /// <summary>
-    /// Aggiunge le impostazioni dell'applicazione ai servizi DI.
-    /// </summary>
-    /// <param name="services">La collection di servizi DI.</param>
-    /// <param name="configuration">La configurazione dell'applicazione.</param>
-    /// <param name="logger">Il logger.</param>
-    /// <returns>IServiceCollection con le impostazioni registrate.</returns>
-    public static IServiceCollection AddAppSettings(this IServiceCollection services, IConfiguration configuration, ILogger logger)
+    public static IServiceCollection AddDatabaseSettings(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        ILogger logger)
     {
-        services.Configure<AppSettings>(options =>
+        var settings = configuration.GetSection("DatabaseSettings").Get<DatabaseSettings>();
+        if (settings == null)
         {
-            configuration.Bind(options);
-            ValidateAppSettings(options, logger);
-        });
+            logger.LogError("Sezione DatabaseSettings mancante in configurazione");
+            throw new InvalidOperationException("DatabaseSettings non configurato");
+        }
 
-        services.Configure<ConnectionStringsSettings>(options =>
-        {
-            configuration.GetSection("ConnectionStrings").Bind(options);
-            ValidateConnectionStrings(options, logger);
-        });
-
-        services.Configure<DatabaseSettings>(options =>
-        {
-            configuration.GetSection("DatabaseSettings").Bind(options);
-            ValidateDatabaseSettings(options, logger);
-        });
-
-        services.Configure<ORMSettings>(options =>
-        {
-            configuration.GetSection("ORMSettings").Bind(options);
-            ValidateORMSettings(options, logger);
-        });
-
-        services.Configure<CacheSettings>(options =>
-        {
-            configuration.GetSection("CacheSettings").Bind(options);
-            ValidateCacheSettings(options, logger);
-        });
-
-        services.Configure<LoggingSettings>(options =>
-        {
-            configuration.GetSection("Logging").Bind(options);
-            ValidateLoggingSettings(options, logger);
-        });
-
+        ValidateDatabaseSettings(settings, logger);
+        services.AddSingleton(settings);
         return services;
-    }
-
-    private static void ValidateAppSettings(AppSettings settings, ILogger logger)
-    {
-        if (string.IsNullOrEmpty(settings.ConnectionStrings.DefaultDatabase))
-            logger.LogWarning("DefaultDatabase non configurato in AppSettings.");
-    }
-
-    private static void ValidateConnectionStrings(ConnectionStringsSettings settings, ILogger logger)
-    {
-        if (string.IsNullOrEmpty(settings.DefaultDatabase))
-            logger.LogWarning("DefaultDatabase non configurato in ConnectionStrings.");
     }
 
     private static void ValidateDatabaseSettings(DatabaseSettings settings, ILogger logger)
     {
         if (string.IsNullOrEmpty(settings.DefaultProvider))
-            logger.LogWarning("DefaultProvider non configurato in DatabaseSettings.");
+        {
+            logger.LogError("DefaultProvider non configurato");
+            throw new InvalidOperationException("DatabaseSettings:DefaultProvider mancante");
+        }
+
+        switch (settings.DefaultProvider)
+        {
+            case "SQLServer":
+                if (string.IsNullOrEmpty(settings.SQLServer.ConnectionString))
+                    ThrowConnectionStringException("SQLServer");
+                break;
+            case "SQLite":
+                if (string.IsNullOrEmpty(settings.SQLite.ConnectionString))
+                    ThrowConnectionStringException("SQLite");
+                break;
+            case "MariaDB":
+                if (string.IsNullOrEmpty(settings.MariaDB.ConnectionString))
+                    ThrowConnectionStringException("MariaDB");
+                break;
+            default:
+                logger.LogError("Provider non supportato: {Provider}", settings.DefaultProvider);
+                throw new InvalidOperationException($"Provider database non valido: {settings.DefaultProvider}");
+        }
     }
 
-    private static void ValidateORMSettings(ORMSettings settings, ILogger logger)
+    private static void ThrowConnectionStringException(string provider)
     {
-        if (string.IsNullOrEmpty(settings.DefaultProvider))
-            logger.LogWarning("DefaultProvider non configurato in ORMSettings.");
-    }
-
-    private static void ValidateCacheSettings(CacheSettings settings, ILogger logger)
-    {
-        if (string.IsNullOrEmpty(settings.DefaultProvider))
-            logger.LogWarning("DefaultProvider non configurato in CacheSettings.");
-    }
-
-    private static void ValidateLoggingSettings(LoggingSettings settings, ILogger logger)
-    {
-        if (!settings.Enabled)
-            logger.LogWarning("Logging non abilitato in LoggingSettings.");
+        throw new InvalidOperationException(
+            $"ConnectionString mancante per il provider {provider}. " +
+            $"Configurare la sezione DatabaseSettings:{provider}:ConnectionString in appsettings.json"
+        );
     }
 }

@@ -10,7 +10,7 @@ namespace FlexCore.Database.SQLServer.Tests
 {
     public class SQLServerProviderTests
     {
-        private const string ConnectionString = "Server=localhost;Database=TestDB;Trusted_Connection=True;TrustServerCertificate=True;";
+        private const string ConnectionString = "Server=VIVOBOOK\\SQLEXPRESS;Database=db_test;Trusted_Connection=True;TrustServerCertificate=True;";
 
         [Fact]
         public void CreateConnection_ShouldReturnOpenConnection()
