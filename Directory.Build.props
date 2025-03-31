@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
@@ -6,19 +7,38 @@
 		<OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
 		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
 		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
-		<CleanFile>$(MSBuildProjectFile).FileListAbsolute.txt</CleanFile>
-		<EnsureCleanBuild>true</EnsureCleanBuild>
+
+		<ShouldGenerateBuildConfig Condition="$(MSBuildProjectFullPath.Contains('\Applications\')) Or '$(GenerateBuildConfig)' == 'true'">true</ShouldGenerateBuildConfig>
 	</PropertyGroup>
 
-	<!--<Target Name="SuperClean" AfterTargets="Clean">
-		<RemoveDir Directories="$(BaseIntermediateOutputPath)" />
-		<RemoveDir Directories="$(OutputPath)" />
-		<RemoveDir Directories="$(ProjectDir)bin" Condition="Exists('$(ProjectDir)bin')" />
-		<RemoveDir Directories="$(ProjectDir)obj" Condition="Exists('$(ProjectDir)obj')" />
-	</Target>-->
+	<Target Name="GenerateBuildConfig" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateBuildConfig)' == 'true'">
+		<PropertyGroup>
+			<BuildConfigFilePath>$(IntermediateOutputPath)BuildConfig.g.cs</BuildConfigFilePath>
+			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
+			<!-- Percorso ASSOLUTO del template (modifica se necessario) -->
+			<BuildConfigTemplatePath>$(WorkSpaceFolder)BuildConfig.template.cs</BuildConfigTemplatePath>
+		</PropertyGroup>
 
-	<!-- Imposta la variabile d'ambiente RESOURCES_FOLDER per il processo di build -->
-	<Target Name="SetResourcesFolderEnv" BeforeTargets="Build" Condition=" '$(OS)' == 'Windows_NT' ">
-		<Exec Command="cmd /c setx RESOURCES_FOLDER &quot;$(WorkSpaceResourcesFolder)&quot; /M" />
+		<!-- Leggi il template -->
+		<ReadLinesFromFile File="$(BuildConfigTemplatePath)">
+			<Output TaskParameter="Lines" ItemName="TemplateLines" />
+		</ReadLinesFromFile>
+
+		<!-- Sostituisci il segnaposto -->
+		<ItemGroup>
+			<ReplacedLines Include="@(TemplateLines->Replace('$ResourcesPath$', '$(EscapedResourcesPath)'))" />
+		</ItemGroup>
+
+		<!-- Genera il file finale -->
+		<WriteLinesToFile
+		  File="$(BuildConfigFilePath)"
+		  Lines="@(ReplacedLines)"
+		  Overwrite="true"
+		  Encoding="UTF-8"/>
+
+		<ItemGroup>
+			<Compile Include="$(BuildConfigFilePath)" />
+			<FileWrites Include="$(BuildConfigFilePath)" />
+		</ItemGroup>
 	</Target>
 </Project>
