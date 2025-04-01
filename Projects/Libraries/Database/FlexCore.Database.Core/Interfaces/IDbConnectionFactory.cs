@@ -1,15 +1,11 @@
-﻿namespace FlexCore.Database.Interfaces;
+﻿using System.Data;
+using System.Threading.Tasks;
 
-using System.Data;
-
-/// <summary>
-/// Interfaccia per la gestione della connessione al database.
-/// </summary>
-public interface IDbConnectionFactory
+namespace FlexCore.Database.Interfaces
 {
-    /// <summary>
-    /// Crea e restituisce una connessione aperta al database.
-    /// </summary>
-    /// <returns>Connessione al database.</returns>
-    IDbConnection CreateConnection();
+    public interface IDbConnectionFactory
+    {
+        IDbConnection CreateConnection();
+        Task<IDbConnection> CreateConnectionAsync();
+    }
 }

@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<GenerateEnviroment>true</GenerateEnviroment>
+		<GenerateWSEnvironment>true</GenerateWSEnvironment>
 	</PropertyGroup>
 	
 	<ItemGroup>

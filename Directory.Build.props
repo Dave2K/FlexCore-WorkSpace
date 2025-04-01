@@ -7,19 +7,19 @@
 		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
 		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
 
-		<!--<GenerateEnviroment>true</GenerateEnviroment>-->
-		<ShouldGenerateEnviroment Condition="'$(GenerateEnviroment)'=='true'">true</ShouldGenerateEnviroment>
+		<!--<GenerateWSEnvironment>true</GenerateWSEnvironment>-->
+		<ShouldGenerateWSEnvironment Condition="'$(GenerateWSEnvironment)'=='true'">true</ShouldGenerateWSEnvironment>
 	</PropertyGroup>
 
-	<Target Name="GenerateEnviroment" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateEnviroment)'=='true'">
+	<Target Name="GenerateWSEnvironment" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateWSEnvironment)'=='true'">
 		<PropertyGroup>
-			<EnviromentTemplatePath>$(WorkSpaceResourcesFolder)Enviroment.template.cs</EnviromentTemplatePath>
+			<WSEnvironmentTemplatePath>$(WorkSpaceResourcesFolder)WSEnvironment.template.cs</WSEnvironmentTemplatePath>
 			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
 			<EscapedTempsPath>$([System.String]::Copy('$(WorkSpaceTempsFolder)').Replace('\', '\\'))</EscapedTempsPath>
-			<EnviromentFilePath>$(IntermediateOutputPath)Enviroment.g.cs</EnviromentFilePath>
+			<WSEnvironmentFilePath>$(IntermediateOutputPath)WSEnvironment.g.cs</WSEnvironmentFilePath>
 		</PropertyGroup>
 
-		<ReadLinesFromFile File="$(EnviromentTemplatePath)">
+		<ReadLinesFromFile File="$(WSEnvironmentTemplatePath)">
 			<Output TaskParameter="Lines" ItemName="TemplateLines" />
 		</ReadLinesFromFile>
 
@@ -29,14 +29,14 @@
 		</ItemGroup>
 
 		<WriteLinesToFile
-		  File="$(EnviromentFilePath)"
+		  File="$(WSEnvironmentFilePath)"
 		  Lines="@(ReplacedLines)"
 		  Overwrite="true"
 		  Encoding="UTF-8" />
 
 		<ItemGroup>
-			<Compile Include="$(EnviromentFilePath)" />
-			<FileWrites Include="$(EnviromentFilePath)" />
+			<Compile Include="$(WSEnvironmentFilePath)" />
+			<FileWrites Include="$(WSEnvironmentFilePath)" />
 		</ItemGroup>
 	</Target>
 </Project>

@@ -1,6 +1,12 @@
 di tanti in tanto appare un folder in sources con nome FlexCoreWorkspace
 
 
+
+
+ meodo di lavoro: Test-Driven Development (TDD)
+
+
+
 namespace FlexCore.Security.Identity.Models
 {
     public class JwtSettings

@@ -23,7 +23,7 @@ public class MariaDBProviderTests
 
     private static string GetConnectionString()
     {
-        string resourcesFolder = Enviroment.ResourcesFolder;
+        string resourcesFolder = WSEnvironment.ResourcesFolder;
         var configuration = new ConfigurationBuilder()
            .SetBasePath(resourcesFolder)
            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)

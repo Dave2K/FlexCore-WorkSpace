@@ -1,10 +1,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ShouldGenerateEnviroment Condition="'$(GenerateEnviroment)'=='true'">true</ShouldGenerateEnviroment>
+        <ShouldGenerateWSEnvironment Condition="'$(GenerateWSEnvironment)'=='true'">true</ShouldGenerateWSEnvironment>
     </PropertyGroup>
 
-    <Target Name="DebugGenerateEnviroment">
-        <Message Text="Valore GenerateEnviroment: $(GenerateEnviroment)" Importance="high" />
-        <Message Text="Valore ShouldGenerateEnviroment: $(ShouldGenerateEnviroment)" Importance="high" />
+    <Target Name="DebugGenerateWSEnvironment">
+        <Message Text="Valore GenerateWSEnvironment: $(GenerateWSEnvironment)" Importance="high" />
+        <Message Text="Valore ShouldGenerateWSEnvironment: $(ShouldGenerateWSEnvironment)" Importance="high" />
     </Target>
 </Project>

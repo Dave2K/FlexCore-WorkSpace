@@ -7,6 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	<PropertyGroup>
+		<GenerateWSEnvironment>true</GenerateWSEnvironment>
+	</PropertyGroup>	
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
@@ -14,7 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Projects\Libraries\Core\FlexCore.Core.Configuration\FlexCore.Core.Configuration.csproj" />
     <ProjectReference Include="..\..\Projects\Libraries\Database\FlexCore.Database.Factory\FlexCore.Database.Factory.csproj" />
+    <ProjectReference Include="..\..\Projects\Libraries\Database\FlexCore.Database.MariaDB\FlexCore.Database.MariaDB.csproj" />
+    <ProjectReference Include="..\..\Projects\Libraries\Database\FlexCore.Database.SQLite\FlexCore.Database.SQLite.csproj" />
+    <ProjectReference Include="..\..\Projects\Libraries\Database\FlexCore.Database.SQLServer\FlexCore.Database.SQLServer.csproj" />
   </ItemGroup>
 
 </Project>

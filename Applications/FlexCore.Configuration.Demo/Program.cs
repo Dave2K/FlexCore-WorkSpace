@@ -11,7 +11,7 @@ class Program
 {
     static void Main()
     {
-        string resourcesFolder = Enviroment.ResourcesFolder;
+        string resourcesFolder = WSEnvironment.ResourcesFolder;
         Console.WriteLine($"Cartella di lavoro: {resourcesFolder}");
 
         string configPath = Path.Combine(resourcesFolder, "appsettings.json");
