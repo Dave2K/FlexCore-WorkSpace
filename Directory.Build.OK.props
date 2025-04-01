@@ -8,21 +8,22 @@
         <BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
         <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
 
-		<ShouldGenerateBuildConfig Condition="$(MSBuildProjectFullPath.Contains('\Applications\')) Or '$(GenerateBuildConfig)' == 'true'">true</ShouldGenerateBuildConfig>
+		<!--<ShouldGenerateEnviroment Condition="$(MSBuildProjectFullPath.Contains('\Applications\')) Or '$(GenerateEnviroment)' == 'true'">true</ShouldGenerateEnviroment>-->
+		<ShouldGenerateEnviroment Condition="'$(GenerateEnviroment)' == 'true'">true</ShouldGenerateEnviroment>
 	</PropertyGroup>
 
-    <Target Name="GenerateBuildConfig" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateBuildConfig)' == 'true'">
+    <Target Name="GenerateEnviroment" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateEnviroment)' == 'true'">
         <PropertyGroup>
-            <BuildConfigTemplatePath>$(WorkSpaceResourcesFolder)BuildConfig.template.cs</BuildConfigTemplatePath>
+            <EnviromentTemplatePath>$(WorkSpaceResourcesFolder)Enviroment.template.cs</EnviromentTemplatePath>
             
 			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
             <EscapedTempsPath>$([System.String]::Copy('$(WorkSpaceTempsFolder)').Replace('\', '\\'))</EscapedTempsPath>
 
-	    	<BuildConfigFilePath>$(IntermediateOutputPath)BuildConfig.g.cs</BuildConfigFilePath>
+	    	<EnviromentFilePath>$(IntermediateOutputPath)Enviroment.g.cs</EnviromentFilePath>
         </PropertyGroup>
 
         <!-- Leggi il template -->
-        <ReadLinesFromFile File="$(BuildConfigTemplatePath)">
+        <ReadLinesFromFile File="$(EnviromentTemplatePath)">
             <Output TaskParameter="Lines" ItemName="TemplateLines" />
         </ReadLinesFromFile>
 
@@ -37,14 +38,14 @@
 
         <!-- Scrivi il file generato -->
         <WriteLinesToFile
-            File="$(BuildConfigFilePath)"
+            File="$(EnviromentFilePath)"
             Lines="@(ReplacedLines)"
             Overwrite="true"
             Encoding="UTF-8" />
 
         <ItemGroup>
-            <Compile Include="$(BuildConfigFilePath)" />
-            <FileWrites Include="$(BuildConfigFilePath)" />
+            <Compile Include="$(EnviromentFilePath)" />
+            <FileWrites Include="$(EnviromentFilePath)" />
         </ItemGroup>
     </Target>
 </Project>

@@ -1,0 +1,10 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ShouldGenerateEnviroment Condition="'$(GenerateEnviroment)'=='true'">true</ShouldGenerateEnviroment>
+    </PropertyGroup>
+
+    <Target Name="DebugGenerateEnviroment">
+        <Message Text="Valore GenerateEnviroment: $(GenerateEnviroment)" Importance="high" />
+        <Message Text="Valore ShouldGenerateEnviroment: $(ShouldGenerateEnviroment)" Importance="high" />
+    </Target>
+</Project>

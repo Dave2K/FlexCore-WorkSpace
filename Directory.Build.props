@@ -1,50 +1,42 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <PropertyGroup>
-        <WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
-        <WorkSpaceResourcesFolder>$(WorkSpaceFolder)Resources\</WorkSpaceResourcesFolder>
-        <WorkSpaceTempsFolder>$(WorkSpaceFolder)Temps\</WorkSpaceTempsFolder>
+	<PropertyGroup>
+		<WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
+		<WorkSpaceResourcesFolder>$(WorkSpaceFolder)Resources\</WorkSpaceResourcesFolder>
+		<WorkSpaceTempsFolder>$(WorkSpaceFolder)Temps\</WorkSpaceTempsFolder>
+		<OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
+		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
 
-        <OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
-        <BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
-        <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
-
-		<ShouldGenerateEnviroment Condition="$(MSBuildProjectFullPath.Contains('\Applications\')) Or '$(GenerateEnviroment)' == 'true'">true</ShouldGenerateEnviroment>
+		<!--<GenerateEnviroment>true</GenerateEnviroment>-->
+		<ShouldGenerateEnviroment Condition="'$(GenerateEnviroment)'=='true'">true</ShouldGenerateEnviroment>
 	</PropertyGroup>
 
-    <Target Name="GenerateEnviroment" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateEnviroment)' == 'true'">
-        <PropertyGroup>
-            <EnviromentTemplatePath>$(WorkSpaceResourcesFolder)Enviroment.template.cs</EnviromentTemplatePath>
-            
+	<Target Name="GenerateEnviroment" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateEnviroment)'=='true'">
+		<PropertyGroup>
+			<EnviromentTemplatePath>$(WorkSpaceResourcesFolder)Enviroment.template.cs</EnviromentTemplatePath>
 			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
-            <EscapedTempsPath>$([System.String]::Copy('$(WorkSpaceTempsFolder)').Replace('\', '\\'))</EscapedTempsPath>
+			<EscapedTempsPath>$([System.String]::Copy('$(WorkSpaceTempsFolder)').Replace('\', '\\'))</EscapedTempsPath>
+			<EnviromentFilePath>$(IntermediateOutputPath)Enviroment.g.cs</EnviromentFilePath>
+		</PropertyGroup>
 
-	    	<EnviromentFilePath>$(IntermediateOutputPath)Enviroment.g.cs</EnviromentFilePath>
-        </PropertyGroup>
+		<ReadLinesFromFile File="$(EnviromentTemplatePath)">
+			<Output TaskParameter="Lines" ItemName="TemplateLines" />
+		</ReadLinesFromFile>
 
-        <!-- Leggi il template -->
-        <ReadLinesFromFile File="$(EnviromentTemplatePath)">
-            <Output TaskParameter="Lines" ItemName="TemplateLines" />
-        </ReadLinesFromFile>
+		<ItemGroup>
+			<TempReplacedLines Include="@(TemplateLines->Replace('$ResourcesPath$', '$(EscapedResourcesPath)'))" />
+			<ReplacedLines Include="@(TempReplacedLines->Replace('$TempsPath$', '$(EscapedTempsPath)'))" />
+		</ItemGroup>
 
-        <!-- Sostituisci $ResourcesPath$ -->
-        <ItemGroup>
-            <TempReplacedLines Include="@(TemplateLines->Replace('$ResourcesPath$', '$(EscapedResourcesPath)'))" />
-        </ItemGroup>
-        <!-- Sostituisci $TempsPath$ nel passaggio successivo -->
-        <ItemGroup>
-            <ReplacedLines Include="@(TempReplacedLines->Replace('$TempsPath$', '$(EscapedTempsPath)'))" />
-        </ItemGroup>
+		<WriteLinesToFile
+		  File="$(EnviromentFilePath)"
+		  Lines="@(ReplacedLines)"
+		  Overwrite="true"
+		  Encoding="UTF-8" />
 
-        <!-- Scrivi il file generato -->
-        <WriteLinesToFile
-            File="$(EnviromentFilePath)"
-            Lines="@(ReplacedLines)"
-            Overwrite="true"
-            Encoding="UTF-8" />
-
-        <ItemGroup>
-            <Compile Include="$(EnviromentFilePath)" />
-            <FileWrites Include="$(EnviromentFilePath)" />
-        </ItemGroup>
-    </Target>
+		<ItemGroup>
+			<Compile Include="$(EnviromentFilePath)" />
+			<FileWrites Include="$(EnviromentFilePath)" />
+		</ItemGroup>
+	</Target>
 </Project>
