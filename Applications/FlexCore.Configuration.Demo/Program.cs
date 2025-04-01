@@ -1,9 +1,9 @@
-﻿using WorkSpace.Generated;
-using FlexCore.Core.Configuration.Adapter;
+﻿using FlexCore.Core.Configuration.Adapter;
 using FlexCore.Core.Configuration.Interface;
 using FlexCore.Core.Configuration.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WorkSpace.Generated;
 
 namespace FlexCore.Configuration.Demo;
 

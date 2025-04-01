@@ -3,19 +3,42 @@ using FlexCore.Database.SQLServer;
 using System;
 using System.Data;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using Moq;
+using WorkSpace.Generated;
 
 namespace FlexCore.Database.SQLServer.Tests
 {
     public class SQLServerProviderTests
     {
-        private const string ConnectionString = "Server=VIVOBOOK\\SQLEXPRESS;Database=db_test;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string _connectionString;
+
+        public SQLServerProviderTests()
+        {
+            _connectionString = GetConnectionString();
+        }
+
+        private static string GetConnectionString()
+        {
+            string resourcesFolder = Enviroment.ResourcesFolder;
+            var configuration = new ConfigurationBuilder()
+               .SetBasePath(resourcesFolder)
+               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+               .Build();
+            string? connString = configuration["DatabaseSettings:SQLServer:ConnectionString"];
+
+            if (string.IsNullOrEmpty(connString))
+            {
+                throw new InvalidOperationException("ConnectionString non trovata in appsettings.json");
+            }
+
+            return connString;
+        }
 
         [Fact]
         public void CreateConnection_ShouldReturnOpenConnection()
         {
-            var provider = new SQLServerProvider(ConnectionString);
+            var provider = new SQLServerProvider(_connectionString);
             using var connection = provider.CreateConnection();
             Assert.NotNull(connection);
         }
@@ -23,7 +46,7 @@ namespace FlexCore.Database.SQLServer.Tests
         [Fact]
         public async Task CreateConnectionAsync_ShouldReturnOpenConnection()
         {
-            var provider = new SQLServerProvider(ConnectionString);
+            var provider = new SQLServerProvider(_connectionString);
             using var connection = await provider.CreateConnectionAsync();
             Assert.NotNull(connection);
         }
@@ -45,8 +68,12 @@ namespace FlexCore.Database.SQLServer.Tests
         {
             var mockConnection = new Mock<IDbConnection>();
             mockConnection.Setup(c => c.State).Returns(ConnectionState.Open);
-            var provider = new SQLServerProvider(ConnectionString);
-            var connection = provider.CreateConnection();
+
+            // Creiamo un provider con una connessione mockata
+            var provider = new SQLServerProvider(_connectionString);
+
+            using var connection = provider.CreateConnection();
+            Assert.NotNull(connection);
             Assert.Equal(ConnectionState.Open, connection.State);
         }
     }

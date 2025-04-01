@@ -6,14 +6,37 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 using MySqlConnector;
+using WorkSpace.Generated;
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// Test per la classe <see cref="MariaDBProvider"/>.
 /// </summary>
 public class MariaDBProviderTests
 {
-    private const string TestConnectionString = "Server=localhost;Database=TestDb;User=root;Password=4321;";
+    private readonly string _connectionString;
 
+    public MariaDBProviderTests()
+    {
+        _connectionString = GetConnectionString();
+    }
+
+    private static string GetConnectionString()
+    {
+        string resourcesFolder = Enviroment.ResourcesFolder;
+        var configuration = new ConfigurationBuilder()
+           .SetBasePath(resourcesFolder)
+           .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+           .Build();
+        string? connString = configuration["DatabaseSettings:MariaDB:ConnectionString"];
+
+        if (string.IsNullOrEmpty(connString))
+        {
+            throw new InvalidOperationException("ConnectionString non trovata in appsettings.json");
+        }
+
+        return connString;
+    }
     /// <summary>
     /// Verifica che il costruttore sollevi un'eccezione se la stringa di connessione è nulla o vuota.
     /// </summary>
@@ -30,7 +53,7 @@ public class MariaDBProviderTests
     [Fact]
     public void CreateConnection_ReturnsOpenConnection()
     {
-        var provider = new MariaDBProvider(TestConnectionString);
+        var provider = new MariaDBProvider(_connectionString);
         using var connection = provider.CreateConnection();
 
         Assert.Equal(ConnectionState.Open, connection.State);
@@ -43,7 +66,7 @@ public class MariaDBProviderTests
     [Fact]
     public async Task CreateConnectionAsync_ReturnsOpenConnection()
     {
-        var provider = new MariaDBProvider(TestConnectionString);
+        var provider = new MariaDBProvider(_connectionString);
         using var connection = await provider.CreateConnectionAsync();
 
         Assert.Equal(ConnectionState.Open, connection.State);
