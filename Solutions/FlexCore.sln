@@ -126,8 +126,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Varie", "_Varie", "{E72FEF
 		..\.gitignore = ..\.gitignore
 		..\Resources\appsettings.json = ..\Resources\appsettings.json
 		..\Resources\BuildConfig.template.cs = ..\Resources\BuildConfig.template.cs
-		..\Directory.Build.props = ..\Directory.Build.props
 		..\Documents\memo.txt = ..\Documents\memo.txt
+		..\Resources\Enviroment.template.cs = ..\Resources\Enviroment.template.cs
+		..\Directory.Build.props = ..\Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Caching.Common", "..\Projects\Libraries\Caching\FlexCore.Caching.Common\FlexCore.Caching.Common.csproj", "{DC1C3CA6-C3EC-432D-8CA3-166D5824DF27}"

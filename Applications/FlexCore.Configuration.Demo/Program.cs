@@ -1,11 +1,12 @@
-﻿using FlexCore.Core.Configuration.Adapter;
-using FlexCore.Core.Configuration.Generated;
+﻿//using FlexCore.Core.Configuration.Generated;
+using WorkSpace.Generated;
+using FlexCore.Core.Configuration.Adapter;
 using FlexCore.Core.Configuration.Interface;
 using FlexCore.Core.Configuration.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.IO;
+//using System;
+//using System.IO;
 
 namespace FlexCore.Configuration.Demo;
 
@@ -13,7 +14,8 @@ class Program
 {
     static void Main()
     {
-        string resourcesFolder = BuildConfig.ResourcesFolder;
+        //string resourcesFolder = BuildConfig.ResourcesFolder;
+        string resourcesFolder = Enviroment.ResourcesFolder;
         Console.WriteLine($"Cartella di lavoro: {resourcesFolder}");
 
         string configPath = Path.Combine(resourcesFolder, "appsettings.json");
