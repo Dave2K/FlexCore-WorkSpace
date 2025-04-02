@@ -13,7 +13,7 @@ var services = new ServiceCollection();
 //     "InstanceName": "DemoApp"
 //   }
 // }
-services.AddCacheProvider("MemoryCache"); // "Redis" o "MemoryCache"
+//services.AddCacheProvider("MemoryCache"); // "Redis" o "MemoryCache"
 
 var provider = services.BuildServiceProvider();
 var cache = provider.GetRequiredService<ICacheService>();

@@ -1,36 +1,33 @@
-﻿using Xunit;
-using Moq;
-using FlexCore.Caching.Core;
+﻿using FlexCore.Caching.Core;
 using FlexCore.Caching.Core.Interfaces;
 using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace FlexCore.Caching.Core.Tests
 {
-    /// <summary>
-    /// Test per la classe BaseCacheManager
-    /// </summary>
     public class BaseCacheManagerTests
     {
-        private class TestCacheManager(ILogger<TestCacheManager> logger, ICacheProvider provider)
-            : BaseCacheManager(logger, provider)
-        { }
+        // ✅ Classe pubblica
+        public class TestCacheManager : BaseCacheManager
+        {
+            public TestCacheManager(ILogger logger, ICacheProvider cacheProvider)
+                : base(logger, cacheProvider) { }
+        }
 
-        /// <summary>
-        /// Verifica che il metodo Exists richiami correttamente il provider
-        /// </summary>
         [Fact]
         public void Exists_CallsProviderExists()
         {
             // Arrange
-            var loggerMock = new Mock<ILogger<TestCacheManager>>();
-            var providerMock = new Mock<ICacheProvider>();
-            var manager = new TestCacheManager(loggerMock.Object, providerMock.Object);
+            var loggerMock = new Mock<ILogger>();
+            var cacheProviderMock = new Mock<ICacheProvider>();
+            var manager = new TestCacheManager(loggerMock.Object, cacheProviderMock.Object);
 
             // Act
-            _ = manager.Exists("test_key");
+            manager.Exists("test_key");
 
             // Assert
-            providerMock.Verify(p => p.Exists("test_key"), Times.Once);
+            cacheProviderMock.Verify(p => p.Exists("test_key"), Times.Once);
         }
     }
 }
