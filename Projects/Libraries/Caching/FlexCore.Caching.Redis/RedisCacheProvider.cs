@@ -1,76 +1,49 @@
-﻿namespace FlexCore.Caching.Redis;
+﻿using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using FlexCore.Caching.Core.Interfaces;
 
-using FlexCore.Caching.Core;
-using FlexCore.Caching.Interfaces;
-using StackExchange.Redis;
-using System;
-using System.Text.Json;
-
-/// <summary>
-/// Provider di cache Redis.
-/// </summary>
-public class RedisCacheProvider : BaseCacheManager, ICacheProvider
+namespace FlexCore.Caching.Redis
 {
-    private readonly IDatabase _database;
-
     /// <summary>
-    /// Inizializza una nuova istanza della classe <see cref="RedisCacheProvider"/>.
+    /// Provider di cache Redis
     /// </summary>
-    /// <param name="connection">Istanza di <see cref="IConnectionMultiplexer"/>.</param>
-    public RedisCacheProvider(IConnectionMultiplexer connection)
+    public class RedisCacheProvider(
+        IConnectionMultiplexer connection,
+        ILogger<RedisCacheProvider> logger) : ICacheProvider
     {
-        _database = connection.GetDatabase();
-    }
+        private readonly IDatabase _redisDb = connection.GetDatabase();
+        private readonly ILogger<RedisCacheProvider> _logger = logger;
 
-    /// <summary>
-    /// Ottiene un valore dalla cache.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valore da ottenere.</typeparam>
-    /// <param name="key">Chiave del valore.</param>
-    /// <returns>Il valore associato alla chiave.</returns>
-    public override T Get<T>(string key)
-    {
-        ValidateKey(key);
-        var value = _database.StringGet(key);
+        public bool Exists(string key) => _redisDb.KeyExists(key);
 
-        if (value.IsNullOrEmpty)
-            return default!; // Restituisce il valore predefinito di T
+        public T? Get<T>(string key)
+        {
+            var value = _redisDb.StringGet(key);
+            return value.HasValue ?
+                System.Text.Json.JsonSerializer.Deserialize<T>(value!) :
+                default;
+        }
 
-        return JsonSerializer.Deserialize<T>(value!) ?? default!;
-    }
+        public void Set<T>(string key, T value, TimeSpan expiry)
+        {
+            _redisDb.StringSet(
+                key,
+                System.Text.Json.JsonSerializer.Serialize(value),
+                expiry
+            );
+            _logger.LogInformation($"Impostato valore Redis per la chiave: {key}");
+        }
 
-    /// <summary>
-    /// Imposta un valore nella cache.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valore da impostare.</typeparam>
-    /// <param name="key">Chiave del valore.</param>
-    /// <param name="value">Valore da impostare.</param>
-    /// <param name="expiration">Durata della cache.</param>
-    public override void Set<T>(string key, T value, TimeSpan expiration)
-    {
-        ValidateKey(key);
-        var json = JsonSerializer.Serialize(value);
-        _database.StringSet(key, json, expiration);
-    }
+        public void Remove(string key)
+        {
+            _redisDb.KeyDelete(key);
+            _logger.LogInformation($"Rimossa chiave Redis: {key}");
+        }
 
-    /// <summary>
-    /// Rimuove un valore dalla cache.
-    /// </summary>
-    /// <param name="key">Chiave del valore da rimuovere.</param>
-    public override void Remove(string key)
-    {
-        ValidateKey(key);
-        _database.KeyDelete(key);
-    }
-
-    /// <summary>
-    /// Verifica se una chiave esiste nella cache.
-    /// </summary>
-    /// <param name="key">Chiave da verificare.</param>
-    /// <returns>True se la chiave esiste, altrimenti false.</returns>
-    public override bool Exists(string key)
-    {
-        ValidateKey(key);
-        return _database.KeyExists(key);
+        public void ClearAll()
+        {
+            // Redis non supporta ClearAll, implementazione vuota
+            _logger.LogWarning("Redis non supporta l'operazione ClearAll");
+        }
     }
 }

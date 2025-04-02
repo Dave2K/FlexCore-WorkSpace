@@ -1,80 +1,28 @@
 ﻿using Xunit;
 using FlexCore.Database.SQLServer;
 using System;
-using System.Data;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Moq;
-using WorkSpace.Generated;
 
 namespace FlexCore.Database.SQLServer.Tests
 {
     public class SQLServerProviderTests
     {
-        private readonly string _connectionString;
+        private const string TestConnectionString = "Server=.;Database=tempdb;Trusted_Connection=True;";
 
-        public SQLServerProviderTests()
+        [Fact]
+        public void CreateConnection_ValidString_ReturnsSqlConnection()
         {
-            _connectionString = GetConnectionString();
-        }
-
-        private static string GetConnectionString()
-        {
-            string resourcesFolder = WSEnvironment.ResourcesFolder;
-            var configuration = new ConfigurationBuilder()
-               .SetBasePath(resourcesFolder)
-               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-               .Build();
-            string? connString = configuration["DatabaseSettings:SQLServer:ConnectionString"];
-
-            if (string.IsNullOrEmpty(connString))
-            {
-                throw new InvalidOperationException("ConnectionString non trovata in appsettings.json");
-            }
-
-            return connString;
+            var provider = new SQLServerDatabaseProvider();
+            var connection = provider.CreateConnection(TestConnectionString);
+            Assert.IsType<Microsoft.Data.SqlClient.SqlConnection>(connection);
         }
 
         [Fact]
-        public void CreateConnection_ShouldReturnOpenConnection()
+        public async Task OpenConnectionAsync_ValidConnection_OpensSuccessfully()
         {
-            var provider = new SQLServerProvider(_connectionString);
-            using var connection = provider.CreateConnection();
-            Assert.NotNull(connection);
-        }
-
-        [Fact]
-        public async Task CreateConnectionAsync_ShouldReturnOpenConnection()
-        {
-            var provider = new SQLServerProvider(_connectionString);
-            using var connection = await provider.CreateConnectionAsync();
-            Assert.NotNull(connection);
-        }
-
-        [Fact]
-        public void Constructor_ShouldThrowException_WhenConnectionStringIsNull()
-        {
-            Assert.Throws<ArgumentNullException>(() => new SQLServerProvider(null));
-        }
-
-        [Fact]
-        public void Constructor_ShouldThrowException_WhenConnectionStringIsEmpty()
-        {
-            Assert.Throws<ArgumentNullException>(() => new SQLServerProvider(""));
-        }
-
-        [Fact]
-        public void CreateConnection_ShouldUseMockedConnection()
-        {
-            var mockConnection = new Mock<IDbConnection>();
-            mockConnection.Setup(c => c.State).Returns(ConnectionState.Open);
-
-            // Creiamo un provider con una connessione mockata
-            var provider = new SQLServerProvider(_connectionString);
-
-            using var connection = provider.CreateConnection();
-            Assert.NotNull(connection);
-            Assert.Equal(ConnectionState.Open, connection.State);
+            var provider = new SQLServerDatabaseProvider();
+            var connection = provider.CreateConnection(TestConnectionString);
+            await provider.OpenConnectionAsync(connection);
+            Assert.Equal(System.Data.ConnectionState.Open, connection.State);
         }
     }
 }

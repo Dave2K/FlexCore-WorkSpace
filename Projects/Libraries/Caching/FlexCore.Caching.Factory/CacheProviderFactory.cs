@@ -1,43 +1,35 @@
-﻿namespace FlexCore.Caching.Factory;
-
-using FlexCore.Caching.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using FlexCore.Caching.Core.Interfaces;
 
-/// <summary>
-/// Factory per la creazione e registrazione dinamica dei provider di cache.
-/// </summary>
-public class CacheProviderFactory : ICacheFactory
+namespace FlexCore.Caching.Factory
 {
-    private readonly Dictionary<string, Func<ICacheProvider>> _providers = new();
-
     /// <summary>
-    /// Registra un provider di cache con un nome specifico.
+    /// Factory per la creazione di provider di cache
     /// </summary>
-    /// <param name="name">Nome del provider (es. "MemoryCache", "Redis").</param>
-    /// <param name="providerFactory">Funzione che crea un'istanza del provider.</param>
-    public void RegisterProvider(string name, Func<ICacheProvider> providerFactory)
+    public class CacheProviderFactory : ICacheFactory
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Il nome del provider non può essere vuoto.", nameof(name));
+        private readonly Dictionary<string, Func<ICacheProvider>> _providers;
 
-        if (providerFactory == null)
-            throw new ArgumentNullException(nameof(providerFactory), "La factory del provider non può essere nulla.");
-
-        _providers[name] = providerFactory;
-    }
-
-    /// <summary>
-    /// Crea un'istanza di un provider di cache in base al nome.
-    /// </summary>
-    /// <param name="providerName">Nome del provider da creare.</param>
-    /// <returns>Un'istanza del provider di cache.</returns>
-    public ICacheProvider CreateProvider(string providerName)
-    {
-        if (_providers.TryGetValue(providerName, out var providerFactory))
+        public CacheProviderFactory()
         {
-            return providerFactory();
+            _providers = new Dictionary<string, Func<ICacheProvider>>(
+                StringComparer.OrdinalIgnoreCase
+            );
         }
-        throw new NotSupportedException($"Provider '{providerName}' non supportato.");
+
+        public ICacheProvider CreateCacheProvider(string name)
+        {
+            if (_providers.TryGetValue(name, out var provider))
+            {
+                return provider();
+            }
+            throw new ArgumentException($"Provider '{name}' non registrato");
+        }
+
+        public void RegisterProvider(string name, Func<ICacheProvider> creator)
+        {
+            _providers[name] = creator ?? throw new ArgumentNullException(nameof(creator));
+        }
     }
 }

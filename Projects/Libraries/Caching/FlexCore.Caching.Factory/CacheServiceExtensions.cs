@@ -1,23 +1,22 @@
-﻿namespace FlexCore.Caching.Factory;
+﻿using Microsoft.Extensions.DependencyInjection;
+using FlexCore.Caching.Core.Interfaces;
 
-using Microsoft.Extensions.DependencyInjection;
-using FlexCore.Caching.Interfaces;
-
-/// <summary>
-/// Estensioni per la configurazione del provider di cache.
-/// </summary>
-public static class CacheServiceExtensions
+namespace FlexCore.Caching.Factory
 {
     /// <summary>
-    /// Registra un provider di cache in base al nome specificato.
+    /// Provides extension methods for configuring caching services.
     /// </summary>
-    /// <param name="services">La collection di servizi DI.</param>
-    /// <param name="providerName">Il nome del provider di cache.</param>
-    /// <returns>IServiceCollection con il provider registrato.</returns>
-    public static IServiceCollection AddCacheProvider(this IServiceCollection services, string providerName)
+    public static class CacheServiceExtensions
     {
-        services.AddSingleton<ICacheFactory>(sp => new CacheProviderFactory());
-        services.AddSingleton<ICacheProvider>(sp => sp.GetRequiredService<ICacheFactory>().CreateProvider(providerName));
-        return services;
+        /// <summary>
+        /// Adds a cache factory and related services to the dependency injection container.
+        /// </summary>
+        /// <param name="services">The service collection.</param>
+        /// <returns>The modified service collection.</returns>
+        public static IServiceCollection AddCacheFactory(this IServiceCollection services)
+        {
+            services.AddSingleton<ICacheFactory, CacheProviderFactory>(); // Nome corretto della classe
+            return services;
+        }
     }
 }

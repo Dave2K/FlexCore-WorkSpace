@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-	  <OutputType>Library</OutputType>
-	  <Version>0.1.0</Version>
-	  <TargetFramework>net9.0</TargetFramework>
-	  <RootNamespace>FleFlexCore.Logging.Core</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../Core/FlexCore.Core.Utilities/FlexCore.Core.Utilities.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<Version>0.1.0</Version>
+		<TargetFramework>net9.0</TargetFramework>
+		<RootNamespace>FlexCore.Logging.Core</RootNamespace>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="../../Core/FlexCore.Core.Utilities/FlexCore.Core.Utilities.csproj" />
+	</ItemGroup>
 </Project>

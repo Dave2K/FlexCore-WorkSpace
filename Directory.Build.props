@@ -3,6 +3,7 @@
 		<WorkSpaceFolder>$(MSBuildThisFileDirectory)</WorkSpaceFolder>
 		<WorkSpaceResourcesFolder>$(WorkSpaceFolder)Resources\</WorkSpaceResourcesFolder>
 		<WorkSpaceTempsFolder>$(WorkSpaceFolder)Temps\</WorkSpaceTempsFolder>
+		
 		<OutputPath>$(WorkSpaceFolder)_artifacts\$(MSBuildProjectName)\</OutputPath>
 		<BaseIntermediateOutputPath>$(WorkSpaceFolder)_temp\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
 		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
@@ -14,8 +15,10 @@
 	<Target Name="GenerateWSEnvironment" BeforeTargets="CoreCompile" Condition="'$(ShouldGenerateWSEnvironment)'=='true'">
 		<PropertyGroup>
 			<WSEnvironmentTemplatePath>$(WorkSpaceResourcesFolder)WSEnvironment.template.cs</WSEnvironmentTemplatePath>
+		
 			<EscapedResourcesPath>$([System.String]::Copy('$(WorkSpaceResourcesFolder)').Replace('\', '\\'))</EscapedResourcesPath>
 			<EscapedTempsPath>$([System.String]::Copy('$(WorkSpaceTempsFolder)').Replace('\', '\\'))</EscapedTempsPath>
+			
 			<WSEnvironmentFilePath>$(IntermediateOutputPath)WSEnvironment.g.cs</WSEnvironmentFilePath>
 		</PropertyGroup>
 

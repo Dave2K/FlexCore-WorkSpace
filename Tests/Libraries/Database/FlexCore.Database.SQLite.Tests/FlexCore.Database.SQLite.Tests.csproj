@@ -8,9 +8,9 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<!--<PropertyGroup>
+	<PropertyGroup>
 		<GenerateWSEnvironment>true</GenerateWSEnvironment>
-	</PropertyGroup>-->
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="coverlet.collector" Version="6.0.4">
@@ -30,7 +30,7 @@
 	<ItemGroup>
 		<ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.Core/FlexCore.Database.Core.csproj" />
 		<ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.Factory/FlexCore.Database.Factory.csproj" />
-		<ProjectReference Include="../../../../Projects/Libraries/Database/FlexCore.Database.SQLite/FlexCore.Database.SQLite.csproj" />
+		<ProjectReference Include="..\..\..\..\Projects\Libraries\Database\FlexCore.Database.SQLite\FlexCore.Database.SQLite.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

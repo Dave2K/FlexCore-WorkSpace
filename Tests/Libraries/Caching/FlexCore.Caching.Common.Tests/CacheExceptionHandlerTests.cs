@@ -1,5 +1,4 @@
 ﻿using Xunit;
-using FlexCore.Caching.Common.Handlers;
 using FlexCore.Caching.Common.Exceptions;
 using System;
 

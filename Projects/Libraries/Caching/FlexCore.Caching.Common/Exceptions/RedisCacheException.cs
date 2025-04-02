@@ -1,22 +1,25 @@
-﻿namespace FlexCore.Caching.Common.Exceptions;
+﻿using Microsoft.Extensions.Logging;
 
-using System;
-
-/// <summary>
-/// Eccezione personalizzata per gli errori di cache Redis.
-/// </summary>
-public class RedisCacheException : CacheException
+namespace FlexCore.Caching.Common.Exceptions
 {
     /// <summary>
-    /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
+    /// Eccezione specifica per errori nella cache Redis.
     /// </summary>
-    /// <param name="message">Messaggio di errore.</param>
-    public RedisCacheException(string message) : base(message) { }
-
-    /// <summary>
-    /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
-    /// </summary>
-    /// <param name="message">Messaggio di errore.</param>
-    /// <param name="innerException">Eccezione interna.</param>
-    public RedisCacheException(string message, Exception innerException) : base(message, innerException) { }
+    public class RedisCacheException : CacheException
+    {
+        /// <summary>
+        /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
+        /// </summary>
+        /// <param name="logger">Logger per tracciare l'errore.</param>
+        /// <param name="message">Messaggio descrittivo dell'errore.</param>
+        /// <param name="inner">Eccezione interna.</param>
+        public RedisCacheException(
+            ILogger<RedisCacheException> logger,
+            string message,
+            Exception inner)
+            : base(message, inner)
+        {
+            logger.LogError(inner, message);
+        }
+    }
 }

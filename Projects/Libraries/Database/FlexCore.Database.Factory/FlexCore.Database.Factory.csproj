@@ -6,9 +6,14 @@
 	  <RootNamespace>FlexCore.Database.Factory</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Core\FlexCore.Core.Configuration\FlexCore.Core.Configuration.csproj" />
     <ProjectReference Include="..\FlexCore.Database.Core\FlexCore.Database.Core.csproj" />
+    <ProjectReference Include="..\FlexCore.Database.MariaDB\FlexCore.Database.MariaDB.csproj" />
+    <ProjectReference Include="..\FlexCore.Database.SQLite\FlexCore.Database.SQLite.csproj" />
+    <ProjectReference Include="..\FlexCore.Database.SQLServer\FlexCore.Database.SQLServer.csproj" />
   </ItemGroup>
 </Project>

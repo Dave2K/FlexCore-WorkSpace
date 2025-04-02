@@ -11,6 +11,6 @@
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FlexCore.Caching.Interfaces\FlexCore.Caching.Interfaces.csproj" />
+	  <ProjectReference Include="..\FlexCore.Caching.Core\FlexCore.Caching.Core.csproj" />
 	</ItemGroup>
 </Project>

@@ -1,0 +1,6 @@
+@FlexCore.Web_HostAddress = http://localhost:5136
+
+GET {{FlexCore.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

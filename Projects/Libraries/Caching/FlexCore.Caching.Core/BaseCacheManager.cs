@@ -1,55 +1,29 @@
-﻿namespace FlexCore.Caching.Core;
+﻿using Microsoft.Extensions.Logging;
+using FlexCore.Caching.Core.Interfaces;
 
-using FlexCore.Caching.Common.Handlers;
-using FlexCore.Caching.Common.Validators;
-using FlexCore.Caching.Interfaces;
-using System;
-
-/// <summary>
-/// Classe base astratta per la gestione della cache.
-/// </summary>
-public abstract class BaseCacheManager : ICacheService
+namespace FlexCore.Caching.Core
 {
     /// <summary>
-    /// Ottiene un valore dalla cache.
+    /// Classe astratta base per la gestione della cache
     /// </summary>
-    /// <typeparam name="T">Tipo del valore da ottenere.</typeparam>
-    /// <param name="key">Chiave del valore.</param>
-    /// <returns>Il valore associato alla chiave.</returns>
-    public abstract T Get<T>(string key);
+    public abstract class BaseCacheManager
+    {
+        protected readonly ILogger _logger;
+        protected readonly ICacheProvider _cacheProvider;
 
-    /// <summary>
-    /// Imposta un valore nella cache.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valore da impostare.</typeparam>
-    /// <param name="key">Chiave del valore.</param>
-    /// <param name="value">Valore da impostare.</param>
-    /// <param name="expiration">Durata della cache.</param>
-    public abstract void Set<T>(string key, T value, TimeSpan expiration);
+        protected BaseCacheManager(
+            ILogger logger,
+            ICacheProvider cacheProvider)
+        {
+            _logger = logger;
+            _cacheProvider = cacheProvider;
+        }
 
-    /// <summary>
-    /// Rimuove un valore dalla cache.
-    /// </summary>
-    /// <param name="key">Chiave del valore da rimuovere.</param>
-    public abstract void Remove(string key);
-
-    /// <summary>
-    /// Verifica se una chiave esiste nella cache.
-    /// </summary>
-    /// <param name="key">Chiave da verificare.</param>
-    /// <returns>True se la chiave esiste, altrimenti false.</returns>
-    public abstract bool Exists(string key);
-
-    /// <summary>
-    /// Valida la chiave della cache.
-    /// </summary>
-    /// <param name="key">Chiave da validare.</param>
-    protected static void ValidateKey(string key) => CacheKeyValidator.ValidateKey(key);
-
-    /// <summary>
-    /// Gestisce le eccezioni durante le operazioni di cache.
-    /// </summary>
-    /// <param name="ex">Eccezione.</param>
-    /// <param name="operation">Operazione che ha generato l'eccezione.</param>
-    protected static void HandleException(Exception ex, string operation) => CacheExceptionHandler.HandleException(ex, operation);
+        public virtual bool Exists(string key) => _cacheProvider.Exists(key);
+        public virtual T? Get<T>(string key) => _cacheProvider.Get<T>(key);
+        public virtual void Set<T>(string key, T value, TimeSpan expiry)
+            => _cacheProvider.Set(key, value, expiry);
+        public virtual void Remove(string key) => _cacheProvider.Remove(key);
+        public virtual void ClearAll() => _cacheProvider.ClearAll();
+    }
 }

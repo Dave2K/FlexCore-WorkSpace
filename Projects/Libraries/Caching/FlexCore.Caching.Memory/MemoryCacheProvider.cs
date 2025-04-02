@@ -1,82 +1,51 @@
-﻿namespace FlexCore.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using FlexCore.Caching.Core.Interfaces;
 
-using FlexCore.Caching.Core;
-using FlexCore.Caching.Interfaces;
-using Microsoft.Extensions.Caching.Memory;
-using System;
-
-/// <summary>
-/// Provider di cache in memoria.
-/// </summary>
-public class MemoryCacheProvider : BaseCacheManager, ICacheProvider
+namespace FlexCore.Caching.Memory
 {
-    private readonly IMemoryCache _cache;
-
     /// <summary>
-    /// Inizializza una nuova istanza della classe <see cref="MemoryCacheProvider"/>.
+    /// Provider di cache in-memory
     /// </summary>
-    /// <param name="cache">Istanza di <see cref="IMemoryCache"/>.</param>
-    public MemoryCacheProvider(IMemoryCache cache)
+    public sealed class MemoryCacheProvider : ICacheProvider
     {
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-    }
+        private readonly IMemoryCache _cache;
+        private readonly ILogger<MemoryCacheProvider> _logger;
 
-    /// <summary>
-    /// Ottiene un valore dalla cache.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valore da ottenere.</typeparam>
-    /// <param name="key">Chiave del valore.</param>
-    /// <returns>Il valore associato alla chiave.</returns>
-    public override T Get<T>(string key)
-    {
-        ValidateKey(key);
-        return _cache.Get<T>(key) ?? default!;
-    }
-
-    /// <summary>
-    /// Imposta un valore nella cache.
-    /// </summary>
-    /// <typeparam name="T">Tipo del valore da impostare.</typeparam>
-    /// <param name="key">Chiave del valore.</param>
-    /// <param name="value">Valore da impostare.</param>
-    /// <param name="expiration">Durata della cache.</param>
-    public override void Set<T>(string key, T value, TimeSpan expiration)
-    {
-        ValidateKey(key);
-        _cache.Set(key, value, expiration);
-        if (!_cache.TryGetValue(key, out _))
-            throw new Exception($"Set() failed for key: {key}");
-    }
-
-    /// <summary>
-    /// Rimuove un valore dalla cache.
-    /// </summary>
-    /// <param name="key">Chiave del valore da rimuovere.</param>
-    public override void Remove(string key)
-    {
-        ValidateKey(key);
-        _cache.Remove(key);
-    }
-
-    /// <summary>
-    /// Verifica se una chiave esiste nella cache.
-    /// </summary>
-    /// <param name="key">Chiave da verificare.</param>
-    /// <returns>True se la chiave esiste, altrimenti false.</returns>
-    public override bool Exists(string key)
-    {
-        ValidateKey(key);
-        return _cache.TryGetValue(key, out _);
-    }
-
-    /// <summary>
-    /// Svuota completamente la cache.
-    /// </summary>
-    public void ClearAll()
-    {
-        if (_cache is MemoryCache memoryCache)
+        public MemoryCacheProvider(
+            IMemoryCache cache,
+            ILogger<MemoryCacheProvider> logger)
         {
-            memoryCache.Compact(1.0); // Svuota completamente la cache
+            _cache = cache;
+            _logger = logger;
+        }
+
+        public bool Exists(string key) => _cache.TryGetValue(key, out _);
+
+        public T? Get<T>(string key)
+        {
+            return _cache.TryGetValue(key, out T? value) ? value : default;
+        }
+
+        public void Set<T>(string key, T value, TimeSpan expiry)
+        {
+            _cache.Set(key, value, expiry);
+            _logger.LogInformation($"Impostato valore per la chiave: {key}");
+        }
+
+        public void Remove(string key)
+        {
+            _cache.Remove(key);
+            _logger.LogInformation($"Rimossa chiave: {key}");
+        }
+
+        public void ClearAll()
+        {
+            if (_cache is MemoryCache memCache)
+            {
+                memCache.Compact(1.0);
+                _logger.LogInformation("Cache svuotata completamente");
+            }
         }
     }
 }
