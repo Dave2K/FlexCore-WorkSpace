@@ -1,36 +1,30 @@
-﻿namespace FlexCore.Core.Utilities.Tests;
-
-using FlexCore.Core.Utilities;
+﻿using FlexCore.Core.Utilities;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System;
 using Xunit;
 
-public class ExceptionHandlerTests
+namespace FlexCore.Core.Utilities.Tests
 {
-    [Fact]
-    public void HandleException_ThrowsCustomException_WhenExceptionOccurs()
+    public class ExceptionHandlerTests
     {
-        var ex = new Exception("Test exception");
-        const string operation = "Test operation";
+        [Fact]
+        public void HandleException_CreatesTypedException()
+        {
+            // Arrange
+            var logger = new Mock<ILogger>().Object;
+            var originalEx = new Exception("Test error");
 
-        Func<Exception, string, Exception> customExceptionFactory = (e, op) =>
-            new InvalidOperationException($"Errore durante {op}: {e.Message}");
+            // Act & Assert
+            void ExecuteTest() =>
+                ExceptionHandler.HandleException<InvalidOperationException>( // ✅ Specifica esplicita del tipo
+                    logger,
+                    originalEx,
+                    "TestOperation"
+                );
 
-        Assert.Throws<InvalidOperationException>(() =>
-            ExceptionHandler.HandleException(ex, operation, customExceptionFactory));
-    }
-
-    [Fact]
-    public void HandleException_ThrowsCorrectExceptionMessage_WhenExceptionOccurs()
-    {
-        var ex = new Exception("Test exception");
-        const string operation = "Test operation";
-
-        Func<Exception, string, Exception> customExceptionFactory = (e, op) =>
-            new InvalidOperationException($"Errore durante {op}: {e.Message}");
-
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            ExceptionHandler.HandleException(ex, operation, customExceptionFactory));
-
-        Assert.Equal("Errore durante Test operation: Test exception", exception.Message);
+            var ex = Assert.Throws<InvalidOperationException>(ExecuteTest);
+            Assert.Contains("TestOperation", ex.Message);
+        }
     }
 }

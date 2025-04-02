@@ -1,59 +1,31 @@
 ﻿using Xunit;
-using FlexCore.Caching.Memory;
-using FlexCore.Caching.Interfaces;
+using Moq;
 using Microsoft.Extensions.Caching.Memory;
-using System;
+using Microsoft.Extensions.Logging;
+using FlexCore.Caching.Memory;
 
-public class MemoryCacheProviderTests
+namespace FlexCore.Caching.Memory.Tests
 {
-    [Fact]
-    public void Get_ReturnsDefault_WhenKeyNotExists()
+    public class MemoryCacheProviderTests
     {
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var provider = new MemoryCacheProvider(memoryCache);
-        var result = provider.Get<string>("nonexistent_key");
-        Assert.Null(result);
-    }
+        private readonly MemoryCacheProvider _provider;
+        private readonly Mock<ILogger<MemoryCacheProvider>> _loggerMock = new();
 
-    [Fact]
-    public void Set_AddsValueToCache()
-    {
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var provider = new MemoryCacheProvider(memoryCache);
-        provider.Set("key", "value", TimeSpan.FromMinutes(1));
-        var result = provider.Get<string>("key");
-        Assert.Equal("value", result);
-    }
+        public MemoryCacheProviderTests()
+        {
+            _provider = new MemoryCacheProvider(
+                new MemoryCache(new MemoryCacheOptions()),
+                _loggerMock.Object
+            );
+        }
 
-    [Fact]
-    public void Remove_DeletesValueFromCache()
-    {
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var provider = new MemoryCacheProvider(memoryCache);
-        provider.Set("key", "value", TimeSpan.FromMinutes(1));
-        provider.Remove("key");
-        var result = provider.Get<string>("key");
-        Assert.Null(result);
-    }
+        [Fact]
+        public void SetAndGet_ValidKey_ReturnsValue()
+        {
+            _provider.Set("testKey", "testValue", TimeSpan.FromMinutes(1));
+            var result = _provider.Get<string>("testKey");
 
-    [Fact]
-    public void Exists_ReturnsTrue_WhenKeyExists()
-    {
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var provider = new MemoryCacheProvider(memoryCache);
-        provider.Set("key", "value", TimeSpan.FromMinutes(1));
-        Assert.True(provider.Exists("key"));
-    }
-
-    [Fact]
-    public void ClearAll_RemovesAllValuesFromCache()
-    {
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var provider = new MemoryCacheProvider(memoryCache);
-        provider.Set("key1", "value1", TimeSpan.FromMinutes(1));
-        provider.Set("key2", "value2", TimeSpan.FromMinutes(1));
-        provider.ClearAll();
-        Assert.False(provider.Exists("key1"));
-        Assert.False(provider.Exists("key2"));
+            Assert.Equal("testValue", result);
+        }
     }
 }

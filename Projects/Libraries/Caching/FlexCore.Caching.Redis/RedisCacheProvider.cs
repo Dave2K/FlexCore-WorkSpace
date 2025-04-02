@@ -1,49 +1,41 @@
 ﻿using StackExchange.Redis;
 using Microsoft.Extensions.Logging;
 using FlexCore.Caching.Core.Interfaces;
+using System.Text.Json;
 
-namespace FlexCore.Caching.Redis
+namespace FlexCore.Caching.Redis;
+
+/// <summary>
+/// Implementazione di ICacheProvider che utilizza Redis
+/// </summary>
+/// <param name="connection">Connessione a Redis</param>
+/// <param name="logger">Logger per la tracciatura delle operazioni</param>
+public class RedisCacheProvider(IConnectionMultiplexer connection, ILogger<RedisCacheProvider> logger)
+    : ICacheProvider
 {
-    /// <summary>
-    /// Provider di cache Redis
-    /// </summary>
-    public class RedisCacheProvider(
-        IConnectionMultiplexer connection,
-        ILogger<RedisCacheProvider> logger) : ICacheProvider
+    private readonly IDatabase _redisDb = connection.GetDatabase();
+    private readonly ILogger<RedisCacheProvider> _logger = logger;
+
+    public bool Exists(string key) => _redisDb.KeyExists(key);
+
+    public T? Get<T>(string key)
     {
-        private readonly IDatabase _redisDb = connection.GetDatabase();
-        private readonly ILogger<RedisCacheProvider> _logger = logger;
+        var value = _redisDb.StringGet(key);
+        return value.IsNullOrEmpty ? default : JsonSerializer.Deserialize<T>(value!);
+    }
 
-        public bool Exists(string key) => _redisDb.KeyExists(key);
+    public void Set<T>(string key, T value, TimeSpan expiry)
+        => _redisDb.StringSet(key, JsonSerializer.Serialize(value), expiry);
 
-        public T? Get<T>(string key)
-        {
-            var value = _redisDb.StringGet(key);
-            return value.HasValue ?
-                System.Text.Json.JsonSerializer.Deserialize<T>(value!) :
-                default;
-        }
+    public void Remove(string key) => _redisDb.KeyDelete(key);
 
-        public void Set<T>(string key, T value, TimeSpan expiry)
-        {
-            _redisDb.StringSet(
-                key,
-                System.Text.Json.JsonSerializer.Serialize(value),
-                expiry
-            );
-            _logger.LogInformation($"Impostato valore Redis per la chiave: {key}");
-        }
-
-        public void Remove(string key)
+    public void ClearAll()
+    {
+        var endpoints = _redisDb.Multiplexer.GetEndPoints();
+        var server = _redisDb.Multiplexer.GetServer(endpoints.First());
+        foreach (var key in server.Keys(pattern: "*"))
         {
             _redisDb.KeyDelete(key);
-            _logger.LogInformation($"Rimossa chiave Redis: {key}");
-        }
-
-        public void ClearAll()
-        {
-            // Redis non supporta ClearAll, implementazione vuota
-            _logger.LogWarning("Redis non supporta l'operazione ClearAll");
         }
     }
 }

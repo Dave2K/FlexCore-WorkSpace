@@ -1,26 +1,19 @@
-﻿namespace FlexCore.Caching.Common.Tests;
-
+﻿using Xunit;
+using Moq;
+using Microsoft.Extensions.Logging;
 using FlexCore.Caching.Common.Exceptions;
-using System;
-using Xunit;
 
-public class CacheExceptionTests
+namespace FlexCore.Caching.Common.Tests
 {
-    [Fact]
-    public void CacheException_Constructor_WithMessage()
+    public class CacheExceptionTests
     {
-        var message = "Test exception";
-        var exception = new CacheException(message);
-        Assert.Equal(message, exception.Message);
-    }
+        [Fact]
+        public void CacheException_ShouldContainInnerException()
+        {
+            var innerEx = new Exception("Test inner");
+            var ex = new CacheException("Test message", innerEx); // Passa innerEx
 
-    [Fact]
-    public void CacheException_Constructor_WithMessageAndInnerException()
-    {
-        var message = "Test exception";
-        var innerException = new Exception("Inner exception");
-        var exception = new CacheException(message, innerException);
-        Assert.Equal(message, exception.Message);
-        Assert.Equal(innerException, exception.InnerException);
+            Assert.Equal(innerEx, ex.InnerException);
+        }
     }
 }

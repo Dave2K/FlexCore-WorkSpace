@@ -1,19 +1,23 @@
-﻿namespace FlexCore.Caching.Common.Validators;
+﻿using System.Text.RegularExpressions;
 
-using System;
-
-/// <summary>
-/// Classe statica per la validazione delle chiavi di cache.
-/// </summary>
-public static class CacheKeyValidator
+namespace FlexCore.Caching.Common.Validators
 {
     /// <summary>
-    /// Verifica che la chiave della cache non sia nulla, vuota o composta solo da spazi bianchi.
+    /// Fornisce metodi statici per la validazione delle chiavi della cache.
     /// </summary>
-    /// <param name="key">Chiave da validare.</param>
-    public static void ValidateKey(string key)
+    public static partial class CacheKeyValidator
     {
-        if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentException("La chiave non può essere nulla o composta solo da spazi vuoti.", nameof(key));
+        [GeneratedRegex("^[a-zA-Z0-9_-]+$", RegexOptions.Compiled)]
+        private static partial Regex KeyRegex();
+
+        /// <summary>
+        /// Verifica se una chiave è valida per l'uso nella cache.
+        /// </summary>
+        /// <param name="key">La chiave da validare.</param>
+        /// <returns>True se la chiave è valida, altrimenti False.</returns>
+        public static bool ValidateKey(string key)
+        {
+            return KeyRegex().IsMatch(key);
+        }
     }
 }

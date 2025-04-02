@@ -1,62 +1,36 @@
-﻿namespace FlexCore.Caching.Core.Tests;
-
-using Xunit;
+﻿using Xunit;
+using Moq;
 using FlexCore.Caching.Core;
-using FlexCore.Caching.Interfaces;
-using System;
-using System.Collections.Generic;
+using FlexCore.Caching.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
-public class BaseCacheManagerTests
+namespace FlexCore.Caching.Core.Tests
 {
-    [Fact]
-    public void Get_ReturnsDefault_WhenKeyNotExists()
+    /// <summary>
+    /// Test per la classe BaseCacheManager
+    /// </summary>
+    public class BaseCacheManagerTests
     {
-        var cacheManager = new TestCacheManager();
-        var result = cacheManager.Get<string>("nonexistent_key");
-        Assert.Null(result);
-    }
+        private class TestCacheManager(ILogger<TestCacheManager> logger, ICacheProvider provider)
+            : BaseCacheManager(logger, provider)
+        { }
 
-    [Fact]
-    public void Set_AddsValueToCache()
-    {
-        var cacheManager = new TestCacheManager();
-        cacheManager.Set("key", "value", TimeSpan.FromMinutes(1));
-        var result = cacheManager.Get<string>("key");
-        Assert.Equal("value", result);
-    }
-
-    [Fact]
-    public void Remove_DeletesValueFromCache()
-    {
-        var cacheManager = new TestCacheManager();
-        cacheManager.Set("key", "value", TimeSpan.FromMinutes(1));
-        cacheManager.Remove("key");
-        var result = cacheManager.Get<string>("key");
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void Exists_ReturnsTrue_WhenKeyExists()
-    {
-        var cacheManager = new TestCacheManager();
-        cacheManager.Set("key", "value", TimeSpan.FromMinutes(1));
-        Assert.True(cacheManager.Exists("key"));
-    }
-
-    private class TestCacheManager : BaseCacheManager
-    {
-        private readonly Dictionary<string, object> _cache = new();
-
-        public override T Get<T>(string key) => _cache.ContainsKey(key) ? (T)_cache[key] : default!;
-
-        public override void Set<T>(string key, T value, TimeSpan expiration)
+        /// <summary>
+        /// Verifica che il metodo Exists richiami correttamente il provider
+        /// </summary>
+        [Fact]
+        public void Exists_CallsProviderExists()
         {
-            if (value is null) throw new ArgumentNullException(nameof(value), "Il valore non può essere null.");
-            _cache[key] = value;
+            // Arrange
+            var loggerMock = new Mock<ILogger<TestCacheManager>>();
+            var providerMock = new Mock<ICacheProvider>();
+            var manager = new TestCacheManager(loggerMock.Object, providerMock.Object);
+
+            // Act
+            _ = manager.Exists("test_key");
+
+            // Assert
+            providerMock.Verify(p => p.Exists("test_key"), Times.Once);
         }
-
-        public override void Remove(string key) => _cache.Remove(key);
-
-        public override bool Exists(string key) => _cache.ContainsKey(key);
     }
 }

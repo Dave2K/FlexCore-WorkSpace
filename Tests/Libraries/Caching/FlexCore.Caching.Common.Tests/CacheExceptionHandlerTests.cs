@@ -1,31 +1,37 @@
 ﻿using Xunit;
+using Moq;
+using Microsoft.Extensions.Logging;
 using FlexCore.Caching.Common.Exceptions;
-using System;
 
-namespace FlexCore.Caching.Common.Tests;
-
-public class CacheExceptionHandlerTests
+namespace FlexCore.Caching.Common.Tests
 {
-    [Fact]
-    public void HandleException_ThrowsCacheException_ForGenericException()
+    public class CacheExceptionHandlerTests
     {
-        var exception = new Exception("Generic error");
-        Assert.Throws<CacheException>(() => CacheExceptionHandler.HandleException(exception, "operation"));
-    }
+        [Fact]
+        public void HandleException_ValidOperation_LogsError()
+        {
+            var loggerMock = new Mock<ILogger>();
+            var innerEx = new Exception("Test inner");
+            var cacheEx = new CacheException("Test message", innerEx); // Usa CacheException
 
-    [Fact]
-    public void HandleException_ThrowsCacheException_ForRedisCacheException()
-    {
-        var exception = new RedisCacheException("Redis error");
-        var ex = Assert.Throws<CacheException>(() => CacheExceptionHandler.HandleException(exception, "operation"));
-        Assert.Contains("Redis", ex.Message);
-    }
+            CacheExceptionHandler.HandleException<CacheException>(
+                loggerMock.Object,
+                cacheEx, // Passa CacheException invece di Exception
+                "SET",
+                "testKey",
+                "TestContext"
+            );
 
-    [Fact]
-    public void HandleException_ThrowsCacheException_ForMemoryCacheException()
-    {
-        var exception = new MemoryCacheException("Memory error");
-        var ex = Assert.Throws<CacheException>(() => CacheExceptionHandler.HandleException(exception, "operation"));
-        Assert.Contains("memoria", ex.Message);
+            loggerMock.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    cacheEx,
+                    (Func<It.IsAnyType, Exception?, string>)It.IsAny<object>() // Aggiungi '?'
+                ),
+                Times.Once
+            );
+        }
     }
 }

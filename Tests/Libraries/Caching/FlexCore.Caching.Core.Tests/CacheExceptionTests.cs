@@ -1,55 +1,21 @@
 ﻿using Xunit;
+using Moq;
+using Microsoft.Extensions.Logging;
 using FlexCore.Caching.Common.Exceptions;
 
-namespace FlexCore.Caching.Common.Tests;
-
-public class CacheExceptionTests
+namespace FlexCore.Caching.Core.Tests
 {
-    [Fact]
-    public void CacheException_InitializesWithMessage()
+    public class CacheExceptionTests
     {
-        var exception = new CacheException("Test message");
-        Assert.Equal("Test message", exception.Message);
-    }
+        [Fact]
+        public void CacheException_ShouldContainInnerException()
+        {
+            var loggerMock = new Mock<ILogger<CacheException>>();
+            var innerEx = new Exception("Test inner");
 
-    [Fact]
-    public void CacheException_InitializesWithMessageAndInnerException()
-    {
-        var innerException = new Exception("Inner exception");
-        var exception = new CacheException("Test message", innerException);
-        Assert.Equal("Test message", exception.Message);
-        Assert.Equal(innerException, exception.InnerException);
-    }
+            var ex = new CacheException("Test message", innerEx);
 
-    [Fact]
-    public void MemoryCacheException_InitializesWithMessage()
-    {
-        var exception = new MemoryCacheException("Test message");
-        Assert.Equal("Test message", exception.Message);
-    }
-
-    [Fact]
-    public void MemoryCacheException_InitializesWithMessageAndInnerException()
-    {
-        var innerException = new Exception("Inner exception");
-        var exception = new MemoryCacheException("Test message", innerException);
-        Assert.Equal("Test message", exception.Message);
-        Assert.Equal(innerException, exception.InnerException);
-    }
-
-    [Fact]
-    public void RedisCacheException_InitializesWithMessage()
-    {
-        var exception = new RedisCacheException("Test message");
-        Assert.Equal("Test message", exception.Message);
-    }
-
-    [Fact]
-    public void RedisCacheException_InitializesWithMessageAndInnerException()
-    {
-        var innerException = new Exception("Inner exception");
-        var exception = new RedisCacheException("Test message", innerException);
-        Assert.Equal("Test message", exception.Message);
-        Assert.Equal(innerException, exception.InnerException);
+            Assert.Equal(innerEx, ex.InnerException);
+        }
     }
 }

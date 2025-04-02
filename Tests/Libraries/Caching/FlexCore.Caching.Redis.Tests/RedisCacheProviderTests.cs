@@ -1,48 +1,70 @@
 ﻿using Xunit;
-using FlexCore.Caching.Redis;
-using FlexCore.Caching.Interfaces;
+using Moq;
 using StackExchange.Redis;
-using System;
-using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using FlexCore.Caching.Redis;
+using System.Net;
 
-public class RedisCacheProviderTests
+namespace FlexCore.Caching.Redis.Tests
 {
-    [Fact(Skip = "Redis non installato, test disabilitato temporaneamente")]
-    public void Get_ReturnsDefault_WhenKeyNotExists()
+    /// <summary>
+    /// Test per la classe RedisCacheProvider
+    /// </summary>
+    public class RedisCacheProviderTests
     {
-        var connection = ConnectionMultiplexer.Connect("localhost");
-        var provider = new RedisCacheProvider(connection);
-        var result = provider.Get<string>("nonexistent_key");
-        Assert.Null(result);
-    }
+        private readonly Mock<IConnectionMultiplexer> _connectionMock = new();
+        private readonly Mock<IDatabase> _databaseMock = new();
+        private readonly Mock<ILogger<RedisCacheProvider>> _loggerMock = new();
+        private readonly RedisCacheProvider _provider;
 
-    [Fact(Skip = "Redis non installato, test disabilitato temporaneamente")]
-    public void Set_AddsValueToCache()
-    {
-        var connection = ConnectionMultiplexer.Connect("localhost");
-        var provider = new RedisCacheProvider(connection);
-        provider.Set("key", "value", TimeSpan.FromMinutes(1));
-        var result = provider.Get<string>("key");
-        Assert.Equal("value", result);
-    }
+        public RedisCacheProviderTests()
+        {
+            _connectionMock.Setup(c => c.GetDatabase(
+                It.IsAny<int>(),
+                It.IsAny<object>()
+            )).Returns(_databaseMock.Object);
 
-    [Fact(Skip = "Redis non installato, test disabilitato temporaneamente")]
-    public void Remove_DeletesValueFromCache()
-    {
-        var connection = ConnectionMultiplexer.Connect("localhost");
-        var provider = new RedisCacheProvider(connection);
-        provider.Set("key", "value", TimeSpan.FromMinutes(1));
-        provider.Remove("key");
-        var result = provider.Get<string>("key");
-        Assert.Null(result);
-    }
+            _provider = new RedisCacheProvider(
+                _connectionMock.Object,
+                _loggerMock.Object
+            );
+        }
 
-    [Fact(Skip = "Redis non installato, test disabilitato temporaneamente")]
-    public void Exists_ReturnsTrue_WhenKeyExists()
-    {
-        var connection = ConnectionMultiplexer.Connect("localhost");
-        var provider = new RedisCacheProvider(connection);
-        provider.Set("key", "value", TimeSpan.FromMinutes(1));
-        Assert.True(provider.Exists("key"));
+        /// <summary>
+        /// Verifica che il metodo ClearAll elimini tutte le chiavi
+        /// </summary>
+        [Fact]
+        public void ClearAll_DeletesAllKeys()
+        {
+            // Arrange
+            var serverMock = new Mock<IServer>();
+            var keys = new RedisKey[] { "key1", "key2" };
+
+            _connectionMock.Setup(c => c.GetEndPoints(It.IsAny<bool>()))
+                .Returns([new DnsEndPoint("localhost", 6379)]);
+
+            _connectionMock.Setup(c => c.GetServer(
+                It.IsAny<System.Net.EndPoint>(),
+                It.IsAny<object>() // Fix CS0854
+            )).Returns(serverMock.Object);
+
+            serverMock.Setup(s => s.Keys(
+                It.IsAny<int>(),
+                It.IsAny<RedisValue>(),
+                It.IsAny<int>(),
+                It.IsAny<long>(),
+                It.IsAny<int>(),
+                CommandFlags.None // Fix CS0854
+            )).Returns(keys);
+
+            // Act
+            _provider.ClearAll();
+
+            // Assert
+            _databaseMock.Verify(
+                x => x.KeyDelete(It.IsAny<RedisKey>(), CommandFlags.None),
+                Times.Exactly(keys.Length)
+            );
+        }
     }
 }
