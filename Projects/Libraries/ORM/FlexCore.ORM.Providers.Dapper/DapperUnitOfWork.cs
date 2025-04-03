@@ -13,7 +13,7 @@ public class DapperUnitOfWork : UnitOfWorkBase
     // Connessione al database
     private readonly IDbConnection _connection;
     // Transazione associata alla connessione
-    private IDbTransaction _transaction;
+    private IDbTransaction? _transaction;
 
     /// <summary>
     /// Inizializza una nuova istanza di <see cref="DapperUnitOfWork"/>.
