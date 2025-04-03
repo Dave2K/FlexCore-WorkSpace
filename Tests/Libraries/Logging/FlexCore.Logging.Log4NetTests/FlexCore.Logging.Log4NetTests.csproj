@@ -19,4 +19,5 @@
 	<ItemGroup>
 		<ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Log4Net/FlexCore.Logging.Log4Net.csproj" />
 	</ItemGroup>
+	
 </Project>

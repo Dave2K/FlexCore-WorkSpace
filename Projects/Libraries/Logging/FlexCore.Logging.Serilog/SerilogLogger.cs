@@ -2,7 +2,6 @@
 
 using FleFlexCore.Logging.Core.Base;
 using FlexCore.Logging.Interfaces;
-using global::Serilog;
 
 /// <summary>
 /// Provider di logging con Serilog.

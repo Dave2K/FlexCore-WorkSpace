@@ -1,14 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>0.1.0</Version>
-		<TargetFramework>net9.0</TargetFramework>
 		<RootNamespace>FlexCore.ORM.Providers.Dapper</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-	  <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-	</ItemGroup>
-	<ItemGroup>
 	  <ProjectReference Include="..\FlexCore.ORM.Core\FlexCore.ORM.Core.csproj" />
 	</ItemGroup>
+	
 </Project>

@@ -22,4 +22,5 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\..\Projects\Libraries\Core\FlexCore.Core.Configuration\FlexCore.Core.Configuration.csproj" />
 	</ItemGroup>
+
 </Project>

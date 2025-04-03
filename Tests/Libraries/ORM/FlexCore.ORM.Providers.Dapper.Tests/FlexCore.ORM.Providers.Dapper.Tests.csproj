@@ -21,4 +21,5 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Projects\Libraries\ORM\FlexCore.ORM.Providers.Dapper\FlexCore.ORM.Providers.Dapper.csproj" />
 	</ItemGroup>
+
 </Project>

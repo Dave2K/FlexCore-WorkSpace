@@ -26,4 +26,5 @@
 		<ProjectReference Include="..\..\..\..\Projects\Libraries\Database\FlexCore.Database.Core\FlexCore.Database.Core.csproj" />
 		<ProjectReference Include="..\..\..\..\Projects\Libraries\Database\FlexCore.Database.MariaDB\FlexCore.Database.MariaDB.csproj" />
 	</ItemGroup>
+
 </Project>

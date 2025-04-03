@@ -19,4 +19,5 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Projects\Libraries\ORM\FlexCore.ORM.Core\FlexCore.ORM.Core.csproj" />
 	</ItemGroup>
+
 </Project>

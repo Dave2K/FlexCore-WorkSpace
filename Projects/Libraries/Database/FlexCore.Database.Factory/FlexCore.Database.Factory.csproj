@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	  <OutputType>Library</OutputType>
-	  <Version>0.1.0</Version>
-	  <TargetFramework>net9.0</TargetFramework>
 	  <RootNamespace>FlexCore.Database.Factory</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
@@ -14,4 +12,5 @@
     <ProjectReference Include="..\FlexCore.Database.SQLite\FlexCore.Database.SQLite.csproj" />
     <ProjectReference Include="..\FlexCore.Database.SQLServer\FlexCore.Database.SQLServer.csproj" />
   </ItemGroup>
+
 </Project>

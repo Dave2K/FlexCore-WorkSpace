@@ -19,4 +19,5 @@
 	<ItemGroup>
 		<ProjectReference Include="../../../../Projects/Libraries/Logging/FlexCore.Logging.Serilog/FlexCore.Logging.Serilog.csproj" />
 	</ItemGroup>
+
 </Project>

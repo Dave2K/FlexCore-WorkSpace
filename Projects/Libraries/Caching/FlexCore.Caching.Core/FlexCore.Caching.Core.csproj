@@ -1,15 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>0.1.0</Version>
-		<TargetFramework>net9.0</TargetFramework>
 		<RootNamespace>FlexCore.Caching.Core</RootNamespace>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\FlexCore.Caching.Common\FlexCore.Caching.Common.csproj" />
-
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.3" />
 	</ItemGroup>
 </Project>

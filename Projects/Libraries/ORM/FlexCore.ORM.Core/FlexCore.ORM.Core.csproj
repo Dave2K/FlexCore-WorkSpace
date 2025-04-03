@@ -1,10 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<Version>0.1.0</Version>
-		<TargetFramework>net9.0</TargetFramework>
 		<RootNamespace>FlexCore.ORM.Core</RootNamespace>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
+
 </Project>
