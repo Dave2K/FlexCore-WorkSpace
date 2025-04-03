@@ -11,8 +11,8 @@ namespace FlexCore.Caching.Interfaces.Tests
         {
             var mockProvider = new Mock<ICacheProvider>();
 
-            mockProvider.Setup(p => p.Exists(It.IsAny<string>()));
-            mockProvider.Setup(p => p.Get<string>(It.IsAny<string>()));
+            mockProvider.Setup(p => p.ExistsAsync(It.IsAny<string>()));
+            mockProvider.Setup(p => p.GetAsync<string>(It.IsAny<string>()));
 
             Assert.NotNull(mockProvider.Object);
         }

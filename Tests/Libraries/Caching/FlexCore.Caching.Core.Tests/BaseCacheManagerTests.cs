@@ -24,10 +24,10 @@ namespace FlexCore.Caching.Core.Tests
             var manager = new TestCacheManager(loggerMock.Object, cacheProviderMock.Object);
 
             // Act
-            manager.Exists("test_key");
+            manager.ExistsAsync("test_key");
 
             // Assert
-            cacheProviderMock.Verify(p => p.Exists("test_key"), Times.Once);
+            cacheProviderMock.Verify(p => p.ExistsAsync("test_key"), Times.Once);
         }
     }
 }

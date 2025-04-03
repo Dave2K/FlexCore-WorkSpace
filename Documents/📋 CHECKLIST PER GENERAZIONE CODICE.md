@@ -11,6 +11,6 @@ CHECKLIST PER LA GENERAZIONE DEL CODICE
 - prima di rispondere ho un attesa di 1 minuto circa, se sbagli risposta il tutto diventa una perdita di tempo quindi ti ricordo:
     CODICE COMPLETO CON COMMENTO XML
     risposte concise e complete
-
+- quando manca un file per le analisi e/o le correzioni avvertimi subito
 
 SEI CAPACE DI SEGUIRE SEMPRE QUESTA LINEA GUIDA PRIMA DI OGNI RISPOSTA CHE DARAI ? RISIPONDI SOLO: "SI" o "NO"

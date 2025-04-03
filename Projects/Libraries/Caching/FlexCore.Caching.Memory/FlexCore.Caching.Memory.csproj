@@ -1,10 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<RootNamespace>FlexCore.Caching.Memory</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\FlexCore.Caching.Core\FlexCore.Caching.Core.csproj" />
+		<ProjectReference Include="..\FlexCore.Caching.Core\FlexCore.Caching.Core.csproj" />
 	</ItemGroup>
-
 </Project>
