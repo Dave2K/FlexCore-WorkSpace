@@ -4,12 +4,11 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-
 	<ItemGroup>
-		<ProjectReference Include="..\FlexCore.Database.Core\FlexCore.Database.Core.csproj" />
+	  <PackageReference Include="MySqlConnector" Version="2.4.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MySqlConnector" Version="2.4.0" />
+		<ProjectReference Include="..\FlexCore.Database.Core\FlexCore.Database.Core.csproj" />
 	</ItemGroup>
 </Project>

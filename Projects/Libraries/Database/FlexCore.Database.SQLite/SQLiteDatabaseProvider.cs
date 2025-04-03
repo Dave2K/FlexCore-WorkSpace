@@ -1,7 +1,7 @@
 ﻿using FlexCore.Database.Core.Interfaces;
 using System;
 using System.Data;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Threading.Tasks;
 
 namespace FlexCore.Database.SQLite
@@ -11,7 +11,7 @@ namespace FlexCore.Database.SQLite
     /// </summary>
     public class SQLiteDatabaseProvider : IDatabaseProvider
     {
-        private SQLiteConnection? _connection;
+        private SqliteConnection? _connection;
 
         /// <summary>
         /// Apre una connessione al database SQLite.
@@ -20,7 +20,7 @@ namespace FlexCore.Database.SQLite
         public void Connect(string connectionString)
         {
             Disconnect();
-            _connection = new SQLiteConnection(connectionString);
+            _connection = new SqliteConnection(connectionString);
             _connection.Open();
         }
 
@@ -30,7 +30,7 @@ namespace FlexCore.Database.SQLite
         /// <param name="query">Query SQL da eseguire.</param>
         public IDataReader ExecuteQuery(string query)
         {
-            using var command = new SQLiteCommand(query, _connection);
+            using var command = new SqliteCommand(query, _connection);
             return command.ExecuteReader();
         }
 
@@ -40,7 +40,7 @@ namespace FlexCore.Database.SQLite
         /// <param name="command">Comando SQL da eseguire.</param>
         public int ExecuteNonQuery(string command)
         {
-            using var cmd = new SQLiteCommand(command, _connection);
+            using var cmd = new SqliteCommand(command, _connection);
             return cmd.ExecuteNonQuery();
         }
 
@@ -63,14 +63,14 @@ namespace FlexCore.Database.SQLite
         /// <param name="name">Nome del parametro.</param>
         /// <param name="value">Valore del parametro.</param>
         public IDbDataParameter CreateParameter(string name, object value)
-            => new SQLiteParameter(name, value);
+            => new SqliteParameter(name, value);
 
         /// <summary>
         /// Crea una connessione non aperta.
         /// </summary>
         /// <param name="connectionString">Stringa di connessione.</param>
         public IDbConnection CreateConnection(string connectionString)
-            => new SQLiteConnection(connectionString);
+            => new SqliteConnection(connectionString);
 
         /// <summary>
         /// Apre una connessione in modo asincrono.
@@ -78,7 +78,7 @@ namespace FlexCore.Database.SQLite
         /// <param name="connection">Connessione da aprire.</param>
         public async Task OpenConnectionAsync(IDbConnection connection)
         {
-            if (connection is SQLiteConnection sqliteConn)
+            if (connection is SqliteConnection sqliteConn)
                 await sqliteConn.OpenAsync();
             else
                 throw new ArgumentException("Connessione non valida per SQLite");

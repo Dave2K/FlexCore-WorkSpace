@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Projects\Libraries\Core\FlexCore.Core.Configuration\FlexCore.Core.Configuration.csproj" />
     <ProjectReference Include="..\..\Projects\Libraries\Logging\FlexCore.Logging.Factory\FlexCore.Logging.Factory.csproj" />
   </ItemGroup>
 

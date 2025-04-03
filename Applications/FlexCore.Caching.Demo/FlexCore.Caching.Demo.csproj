@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Projects\Libraries\Caching\FlexCore.Caching.Factory\FlexCore.Caching.Factory.csproj" />
+    <ProjectReference Include="..\..\Projects\Libraries\Core\FlexCore.Core.Configuration\FlexCore.Core.Configuration.csproj" />
   </ItemGroup>
 
 </Project>
