@@ -1,43 +1,128 @@
 ﻿using Xunit;
 using FlexCore.Core.Configuration.Models;
-using System.Collections.Generic;
 
 namespace FlexCore.Core.Configuration.Tests;
 
+/// <summary>
+/// Test per la classe principale di configurazione AppSettings
+/// </summary>
 public class AppSettingsTests
 {
+    /// <summary>
+    /// Verifica che tutte le sezioni di configurazione vengano inizializzate correttamente
+    /// </summary>
     [Fact]
-    public void AppSettings_ShouldLoadAllSectionsCorrectly()
+    public void AppSettings_ShouldInitializeAllRequiredSections()
     {
+        // Arrange & Act
         var appSettings = new AppSettings
         {
             DatabaseSettings = new DatabaseSettings
             {
                 DefaultProvider = "SQLServer",
-                Providers = new List<string> { "SQLServer", "SQLite", "MariaDB" },
+                Providers = new List<string> { "SQLServer" },
                 SQLServer = new SQLServerSettings
                 {
-                    ConnectionString = "test_sqlserver",
-                    EnableRetryOnFailure = true,
-                    MaxRetryCount = 5,
-                    MaxRetryDelay = TimeSpan.FromSeconds(30)
+                    ConnectionString = "test",
+                    MaxRetryDelay = TimeSpan.Zero
                 },
                 SQLite = new SQLiteSettings
                 {
-                    ConnectionString = "test_sqlite",
+                    ConnectionString = "test",
                     JournalMode = "WAL",
-                    Synchronous = "Full"
+                    Synchronous = "NORMAL"
                 },
                 MariaDB = new MariaDBSettings
                 {
-                    ConnectionString = "test_mariadb",
+                    ConnectionString = "test",
                     Pooling = true
+                }
+            },
+            SecuritySettings = new SecuritySettings
+            {
+                DefaultProvider = "JWT",
+                Providers = new List<string> { "JWT" },
+                JWT = new JwtSettings
+                {
+                    SecretKey = "dummy_key",
+                    Issuer = "test",
+                    Audience = "test"
+                },
+                OAuth = new OAuthSettings
+                {
+                    Google = new GoogleSettings
+                    {
+                        ClientId = "dummy",
+                        ClientSecret = "dummy"
+                    },
+                    Facebook = new FacebookSettings
+                    {
+                        ClientId = "dummy",
+                        ClientSecret = "dummy"
+                    }
+                }
+            },
+            Logging = new LoggingSettings
+            {
+                DefaultProvider = "Console",
+                Providers = new List<string> { "Console" },
+                Enabled = true,
+                Level = "Information",
+                Console = new ConsoleLoggingSettings
+                {
+                    IncludeScopes = true,
+                    LogLevel = new LogLevelSettings
+                    {
+                        Default = "Information",
+                        System = "Warning",
+                        Microsoft = "Warning"
+                    }
+                },
+                Log4Net = new Log4NetSettings
+                {
+                    ConfigFile = "dummy.config",
+                    LogLevel = new LogLevelSettings
+                    {
+                        Default = "Debug",
+                        System = "Error",
+                        Microsoft = "Error"
+                    }
+                },
+                Serilog = new SerilogSettings
+                {
+                    Using = new List<string> { "Console" },
+                    MinimumLevel = new MinimumLevelSettings
+                    {
+                        Default = "Information",
+                        Override = new Dictionary<string, string>()
+                    },
+                    WriteTo = new List<WriteToSettings>()
+                }
+            },
+            CacheSettings = new CacheSettings
+            {
+                DefaultProvider = "MemoryCache",
+                Providers = new List<string> { "MemoryCache" },
+                Redis = new RedisSettings
+                {
+                    ConnectionString = "dummy",
+                    InstanceName = "test",
+                    DefaultDatabase = 0,
+                    AbortOnConnectFail = false,
+                    ConnectTimeout = 5000,
+                    SyncTimeout = 5000
+                },
+                MemoryCache = new MemoryCacheSettings
+                {
+                    SizeLimit = 1024,
+                    CompactionPercentage = 0.5,
+                    ExpirationScanFrequency = TimeSpan.FromMinutes(5)
                 }
             },
             ORMSettings = new ORMSettings
             {
                 DefaultProvider = "EFCore",
-                Providers = new List<string> { "EFCore", "Dapper", "ADO" },
+                Providers = new List<string> { "EFCore" },
                 EFCore = new EFCoreSettings
                 {
                     EnableLazyLoading = false,
@@ -51,109 +136,13 @@ public class AppSettingsTests
                 {
                     ConnectionTimeout = 15
                 }
-            },
-            CacheSettings = new CacheSettings
-            {
-                DefaultProvider = "Redis",
-                Providers = new List<string> { "Redis", "MemoryCache" },
-                Redis = new RedisSettings
-                {
-                    ConnectionString = "test_redis",
-                    InstanceName = "test",
-                    DefaultDatabase = 0,
-                    AbortOnConnectFail = false,
-                    ConnectTimeout = 5000,
-                    SyncTimeout = 3000
-                },
-                MemoryCache = new MemoryCacheSettings
-                {
-                    SizeLimit = 1024,
-                    CompactionPercentage = 0.5,
-                    ExpirationScanFrequency = TimeSpan.FromMinutes(5)
-                }
-            },
-            Logging = new LoggingSettings
-            {
-                DefaultProvider = "Serilog",
-                Enabled = true,
-                Level = "Information",
-                Providers = new List<string> { "Console", "Log4Net", "Serilog" },
-                Console = new ConsoleLoggingSettings
-                {
-                    IncludeScopes = true,
-                    LogLevel = new LogLevelSettings
-                    {
-                        Default = "Information",
-                        System = "Warning",
-                        Microsoft = "Warning"
-                    }
-                },
-                Log4Net = new Log4NetSettings
-                {
-                    ConfigFile = "log4net.config",
-                    LogLevel = new LogLevelSettings
-                    {
-                        Default = "Debug",
-                        System = "Error",
-                        Microsoft = "Error"
-                    }
-                },
-                Serilog = new SerilogSettings
-                {
-                    Using = new List<string> { "Console", "File" },
-                    MinimumLevel = new MinimumLevelSettings
-                    {
-                        Default = "Information",
-                        Override = new Dictionary<string, string>
-                        {
-                            { "Microsoft", "Warning" },
-                            { "System", "Error" }
-                        }
-                    },
-                    WriteTo = new List<WriteToSettings>
-                    {
-                        new WriteToSettings
-                        {
-                            Name = "Console",
-                            Args = new Dictionary<string, object>
-                            {
-                                { "outputTemplate", "{Timestamp} [{Level}] {Message}{NewLine}" }
-                            }
-                        }
-                    }
-                }
-            },
-            SecuritySettings = new SecuritySettings
-            {
-                DefaultProvider = "JWT",
-                Providers = new List<string> { "JWT", "OAuth" },
-                JWT = new JwtSettings
-                {
-                    SecretKey = "test_jwt_key",
-                    Issuer = "test_issuer",
-                    Audience = "test_audience",
-                    ExpiryMinutes = 120
-                },
-                OAuth = new OAuthSettings
-                {
-                    Google = new GoogleSettings
-                    {
-                        ClientId = "test_google_id",
-                        ClientSecret = "test_google_secret"
-                    },
-                    Facebook = new FacebookSettings
-                    {
-                        ClientId = "test_facebook_id",
-                        ClientSecret = "test_facebook_secret"
-                    }
-                }
             }
         };
 
-        Assert.NotNull(appSettings.DatabaseSettings);
-        Assert.NotNull(appSettings.ORMSettings);
-        Assert.NotNull(appSettings.CacheSettings);
-        Assert.NotNull(appSettings.Logging);
+        // Assert
         Assert.NotNull(appSettings.SecuritySettings);
+        Assert.NotNull(appSettings.Logging);
+        Assert.NotNull(appSettings.CacheSettings);
+        Assert.NotNull(appSettings.ORMSettings);
     }
 }

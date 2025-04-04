@@ -1,27 +1,29 @@
 ﻿namespace FlexCore.Core.Configuration.Models;
 
 /// <summary>
-/// Impostazioni specifiche per Microsoft SQL Server.
+/// Impostazioni specifiche per la connessione a Microsoft SQL Server
 /// </summary>
 public class SQLServerSettings
 {
     /// <summary>
-    /// Stringa di connessione per SQL Server.
+    /// Stringa di connessione al database
     /// </summary>
+    /// <example>Server=.;Database=MyDB;User Id=user;Password=password;</example>
     public required string ConnectionString { get; set; }
 
     /// <summary>
-    /// Abilita il tentativo di riconnessione automatica in caso di errori temporanei.
+    /// Abilita il tentativo automatico di riconnessione in caso di errori temporanei
     /// </summary>
     public bool EnableRetryOnFailure { get; set; }
 
     /// <summary>
-    /// Numero massimo di tentativi di riconnessione.
+    /// Numero massimo di tentativi di riconnessione
     /// </summary>
     public int MaxRetryCount { get; set; }
 
     /// <summary>
-    /// Tempo massimo di attesa tra i tentativi di riconnessione (formato TimeSpan).
+    /// Intervallo massimo tra i tentativi di riconnessione
     /// </summary>
+    /// <example>00:00:30 (30 secondi)</example>
     public required TimeSpan MaxRetryDelay { get; set; }
 }

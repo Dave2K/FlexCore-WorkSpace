@@ -1,32 +1,19 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using FlexCore.Core.Configuration.Models;
 
 namespace FlexCore.Core.Configuration.Extensions;
 
+/// <summary>
+/// Estensioni per la gestione centralizzata della configurazione
+/// </summary>
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddDatabaseSettings(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        ILogger logger)
+    /// <summary>
+    /// Valida le impostazioni principali del database
+    /// </summary>
+    public static void ValidateDatabaseSettings(DatabaseSettings settings, ILogger logger)
     {
-        var settings = configuration.GetSection("DatabaseSettings").Get<DatabaseSettings>();
-        if (settings == null)
-        {
-            logger.LogError("Sezione DatabaseSettings mancante in configurazione");
-            throw new InvalidOperationException("DatabaseSettings non configurato");
-        }
-
-        ValidateDatabaseSettings(settings, logger);
-        services.AddSingleton(settings);
-        return services;
-    }
-
-    private static void ValidateDatabaseSettings(DatabaseSettings settings, ILogger logger)
-    {
-        if (string.IsNullOrEmpty(settings.DefaultProvider))
+        if (string.IsNullOrWhiteSpace(settings.DefaultProvider))
         {
             logger.LogError("DefaultProvider non configurato");
             throw new InvalidOperationException("DatabaseSettings:DefaultProvider mancante");
@@ -35,28 +22,41 @@ public static class ServiceCollectionExtensions
         switch (settings.DefaultProvider)
         {
             case "SQLServer":
-                if (string.IsNullOrEmpty(settings.SQLServer.ConnectionString))
-                    ThrowConnectionStringException("SQLServer");
+                ValidateSQLServer(settings.SQLServer, logger);
                 break;
             case "SQLite":
-                if (string.IsNullOrEmpty(settings.SQLite.ConnectionString))
-                    ThrowConnectionStringException("SQLite");
+                ValidateSQLite(settings.SQLite, logger);
                 break;
             case "MariaDB":
-                if (string.IsNullOrEmpty(settings.MariaDB.ConnectionString))
-                    ThrowConnectionStringException("MariaDB");
+                ValidateMariaDB(settings.MariaDB, logger);
                 break;
             default:
                 logger.LogError("Provider non supportato: {Provider}", settings.DefaultProvider);
-                throw new InvalidOperationException($"Provider database non valido: {settings.DefaultProvider}");
+                throw new InvalidOperationException($"Provider {settings.DefaultProvider} non valido");
         }
     }
 
-    private static void ThrowConnectionStringException(string provider)
+    private static void ValidateSQLServer(SQLServerSettings settings, ILogger logger)
     {
-        throw new InvalidOperationException(
-            $"ConnectionString mancante per il provider {provider}. " +
-            $"Configurare la sezione DatabaseSettings:{provider}:ConnectionString in appsettings.json"
-        );
+        if (string.IsNullOrWhiteSpace(settings.ConnectionString))
+            ThrowConnectionError("SQLServer", logger);
+    }
+
+    private static void ValidateSQLite(SQLiteSettings settings, ILogger logger)
+    {
+        if (string.IsNullOrWhiteSpace(settings.ConnectionString))
+            ThrowConnectionError("SQLite", logger);
+    }
+
+    private static void ValidateMariaDB(MariaDBSettings settings, ILogger logger)
+    {
+        if (string.IsNullOrWhiteSpace(settings.ConnectionString))
+            ThrowConnectionError("MariaDB", logger);
+    }
+
+    private static void ThrowConnectionError(string provider, ILogger logger)
+    {
+        logger.LogError("ConnectionString mancante per {Provider}", provider);
+        throw new InvalidOperationException($"Configurare DatabaseSettings:{provider}:ConnectionString");
     }
 }

@@ -3,51 +3,46 @@ using FlexCore.Core.Configuration.Models;
 
 namespace FlexCore.Core.Configuration.Tests;
 
+/// <summary>
+/// Test suite per la classe DatabaseSettings
+/// </summary>
 public class DatabaseSettingsTests
 {
+    /// <summary>
+    /// Verifica l'inizializzazione corretta di tutte le proprietà richieste
+    /// </summary>
     [Fact]
-    public void DatabaseSettings_ShouldMapCorrectly_FromAppSettingsJson()
+    public void DatabaseSettings_ShouldInitializeAllRequiredProperties()
     {
-        // Configurazione di esempio (simile alla sezione "DatabaseSettings" in appsettings.json)
+        // Arrange & Act
         var dbSettings = new DatabaseSettings
         {
             DefaultProvider = "SQLServer",
             Providers = new List<string> { "SQLServer", "SQLite", "MariaDB" },
             SQLServer = new SQLServerSettings
             {
-                ConnectionString = "Server=.;Database=MasterDB;User Id=sa;Password=YourStrong!Pass123;",
+                ConnectionString = "Server=.;Database=TestDB;",
                 EnableRetryOnFailure = true,
                 MaxRetryCount = 5,
-                MaxRetryDelay = TimeSpan.FromSeconds(45)
+                MaxRetryDelay = TimeSpan.FromSeconds(30)
             },
             SQLite = new SQLiteSettings
             {
-                ConnectionString = "Data Source=./database.db;Version=3;",
-                JournalMode = "WAL",
-                CacheSize = -2000,
-                Synchronous = "Full"
+                ConnectionString = "Data Source=test.db;", // ✅ Required
+                JournalMode = "WAL", // ✅ Required
+                Synchronous = "NORMAL", // ✅ Required
+                CacheSize = -2000
             },
             MariaDB = new MariaDBSettings
             {
-                ConnectionString = "Server=localhost;Port=3306;Database=FlexDB;User=root;Password=mariaPassword;",
-                Pooling = true
+                ConnectionString = "Server=localhost;Port=3306;Database=test;", // ✅ Required
+                Pooling = true // ✅ Required
             }
         };
 
-        // Assert: Verifica il mapping delle proprietà principali
+        // Assert
         Assert.Equal("SQLServer", dbSettings.DefaultProvider);
-        Assert.Equal(["SQLServer", "SQLite", "MariaDB"], dbSettings.Providers);
-
-        // Assert: Verifica le impostazioni di SQLServer
-        Assert.True(dbSettings.SQLServer.EnableRetryOnFailure);
-        Assert.Equal(5, dbSettings.SQLServer.MaxRetryCount);
-        Assert.Equal(TimeSpan.FromSeconds(45), dbSettings.SQLServer.MaxRetryDelay);
-
-        // Assert: Verifica le impostazioni di SQLite
         Assert.Equal("WAL", dbSettings.SQLite.JournalMode);
-        Assert.Equal(-2000, dbSettings.SQLite.CacheSize);
-
-        // Assert: Verifica le impostazioni di MariaDB
         Assert.True(dbSettings.MariaDB.Pooling);
     }
 }

@@ -3,7 +3,6 @@ using FlexCore.Core.Configuration.Interface;
 using FlexCore.Core.Configuration.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using WorkSpace.Generated;
 
 namespace FlexCore.Configuration.Demo;
 
@@ -11,7 +10,7 @@ class Program
 {
     static void Main()
     {
-        string resourcesFolder = WSEnvironment.ResourcesFolder;
+        string resourcesFolder = WorkSpace.Generated.WSEnvironment.ResourcesFolder;
         Console.WriteLine($"Cartella di lavoro: {resourcesFolder}");
 
         string configPath = Path.Combine(resourcesFolder, "appsettings.json");

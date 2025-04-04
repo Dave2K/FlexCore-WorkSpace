@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using FlexCore.Core.Configuration.Models;
@@ -8,38 +6,98 @@ using FlexCore.Core.Configuration.Extensions;
 
 namespace FlexCore.Core.Configuration.Tests;
 
+/// <summary>
+/// Test suite per le estensioni di configurazione del database
+/// </summary>
 public class ServiceCollectionExtensionsTests
 {
+    /// <summary>
+    /// Verifica il corretto rilevamento di un provider non supportato
+    /// </summary>
     [Fact]
-    public void AddDatabaseSettings_ShouldRegisterDatabaseSettings()
+    public void ValidateDatabaseSettings_ThrowsForUnsupportedProvider()
     {
-        var services = new ServiceCollection();
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
+        // Arrange
+        var invalidSettings = new DatabaseSettings
+        {
+            DefaultProvider = "Oracle",
+            Providers = new List<string> { "SQLServer", "SQLite" },
+            SQLServer = new SQLServerSettings
             {
-                {"DatabaseSettings:DefaultProvider", "SQLServer"},
-                {"DatabaseSettings:SQLServer:ConnectionString", "valid_conn_string"}
-            })
-            .Build();
+                ConnectionString = "valid_conn",
+                MaxRetryDelay = TimeSpan.Zero
+            },
+            SQLite = new SQLiteSettings
+            {
+                ConnectionString = "valid_conn",
+                JournalMode = "WAL",
+                Synchronous = "NORMAL"
+            },
+            MariaDB = new MariaDBSettings
+            {
+                ConnectionString = "valid_conn",
+                Pooling = true
+            }
+        };
+
         var loggerMock = new Mock<ILogger>();
 
-        services.AddDatabaseSettings(config, loggerMock.Object);
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ServiceCollectionExtensions.ValidateDatabaseSettings(invalidSettings, loggerMock.Object));
 
-        var provider = services.BuildServiceProvider();
-        var dbSettings = provider.GetService<DatabaseSettings>();
-
-        Assert.NotNull(dbSettings);
-        Assert.Equal("SQLServer", dbSettings.DefaultProvider);
+        // Verify
+        loggerMock.Verify(log => log.Log(
+            LogLevel.Error,
+            It.IsAny<EventId>(),
+            It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Oracle")),
+            It.IsAny<Exception>(),
+            It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
+    /// <summary>
+    /// Verifica il rilevamento di una connection string mancante per SQLite
+    /// </summary>
     [Fact]
-    public void AddDatabaseSettings_ShouldThrowOnMissingConfiguration()
+    public void ValidateDatabaseSettings_ThrowsForMissingSQLiteConnectionString()
     {
-        var services = new ServiceCollection();
-        var config = new ConfigurationBuilder().Build(); // Configurazione vuota
+        // Arrange
+        var settings = new DatabaseSettings
+        {
+            DefaultProvider = "SQLite",
+            Providers = new List<string> { "SQLite" },
+            SQLite = new SQLiteSettings
+            {
+                ConnectionString = "", // ❌
+                JournalMode = "WAL",
+                Synchronous = "NORMAL"
+            },
+            SQLServer = new SQLServerSettings
+            {
+                ConnectionString = "dummy",
+                MaxRetryDelay = TimeSpan.Zero
+            },
+            MariaDB = new MariaDBSettings
+            {
+                ConnectionString = "dummy",
+                Pooling = true
+            }
+        };
+
         var loggerMock = new Mock<ILogger>();
 
-        Assert.Throws<InvalidOperationException>(() =>
-            services.AddDatabaseSettings(config, loggerMock.Object));
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ServiceCollectionExtensions.ValidateDatabaseSettings(settings, loggerMock.Object));
+
+        // Verify
+        loggerMock.Verify(log => log.Log(
+            LogLevel.Error,
+            It.IsAny<EventId>(),
+            It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("SQLite")),
+            It.IsAny<Exception>(),
+            It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }
