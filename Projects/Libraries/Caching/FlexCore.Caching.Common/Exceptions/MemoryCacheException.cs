@@ -7,6 +7,9 @@ namespace FlexCore.Caching.Common.Exceptions
     /// </summary>
     public class MemoryCacheException : CacheException
     {
+        /// <summary>
+        /// Inizializza una nuova istanza della classe
+        /// </summary>
         public MemoryCacheException(
             ILogger<MemoryCacheException> logger,
             string message,

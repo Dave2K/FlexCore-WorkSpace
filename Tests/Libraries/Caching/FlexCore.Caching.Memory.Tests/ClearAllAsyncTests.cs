@@ -1,52 +1,52 @@
 ﻿using Xunit;
-using Moq;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Threading.Tasks;
+using Moq;
 
 namespace FlexCore.Caching.Memory.Tests
 {
     /// <summary>
-    /// Test per la classe <see cref="MemoryCacheProvider"/>
+    /// Test per il metodo ClearAllAsync di MemoryCacheProvider
     /// </summary>
-    public class MemoryCacheProviderTests
+    public class ClearAllAsyncTests
     {
         /// <summary>
-        /// Verifica il salvataggio di una chiave valida
+        /// Verifica che lo svuotamento della cache rimuova tutte le chiavi
         /// </summary>
         [Fact]
-        public async Task SetAsync_ValidKey_ReturnsTrue()
+        public async Task ClearAllAsync_RemovesAllKeys()
         {
             // Arrange
             var cache = new MemoryCache(new MemoryCacheOptions());
             var logger = Mock.Of<ILogger<MemoryCacheProvider>>();
             var provider = new MemoryCacheProvider(cache, logger);
 
+            // Aggiungi dati alla cache
+            await provider.SetAsync("key1", "value1", TimeSpan.FromMinutes(1));
+            await provider.SetAsync("key2", 100, TimeSpan.FromMinutes(1));
+
             // Act
-            var result = await provider.SetAsync("test_key", "valore", TimeSpan.FromMinutes(1));
+            await provider.ClearAllAsync();
 
             // Assert
-            Assert.True(result);
+            Assert.False(await provider.ExistsAsync("key1"));
+            Assert.False(await provider.ExistsAsync("key2"));
         }
 
         /// <summary>
-        /// Verifica la rimozione di una chiave esistente
+        /// Verifica il comportamento con cache vuota
         /// </summary>
         [Fact]
-        public async Task RemoveAsync_ExistingKey_ReturnsTrue()
+        public async Task ClearAllAsync_EmptyCache_CompletesSuccessfully()
         {
             // Arrange
             var cache = new MemoryCache(new MemoryCacheOptions());
-            cache.Set("test_key", "valore");
             var logger = Mock.Of<ILogger<MemoryCacheProvider>>();
             var provider = new MemoryCacheProvider(cache, logger);
 
-            // Act
-            var result = await provider.RemoveAsync("test_key");
-
-            // Assert
-            Assert.True(result);
+            // Act/Assert
+            await provider.ClearAllAsync(); // Non dovrebbe lanciare eccezioni
         }
     }
 }

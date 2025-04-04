@@ -1,11 +1,16 @@
-﻿namespace FlexCore.Caching.Common.Exceptions
+﻿using System;
+
+namespace FlexCore.Caching.Common.Exceptions
 {
     /// <summary>
-    /// Eccezione base per gli errori di caching
+    /// Eccezione base per tutti gli errori relativi alla cache
     /// </summary>
     public class CacheException : Exception
     {
-        public CacheException(string message, Exception inner)
-            : base(message, inner) { }
+        /// <summary>
+        /// Inizializza una nuova istanza della classe
+        /// </summary>
+        public CacheException(string message, Exception innerException)
+            : base(message, innerException) { }
     }
 }

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using FlexCore.Caching.Core.Interfaces;
+﻿using FlexCore.Caching.Core.Interfaces;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace FlexCore.Caching.Core
 {
     /// <summary>
-    /// Classe base astratta per la gestione asincrona della cache.
+    /// Classe base per la gestione della cache
     /// </summary>
     public abstract class BaseCacheManager
     {
@@ -14,77 +13,30 @@ namespace FlexCore.Caching.Core
         protected readonly ICacheProvider _cacheProvider;
 
         /// <summary>
-        /// Inizializza una nuova istanza della classe <see cref="BaseCacheManager"/>.
+        /// Inizializza una nuova istanza del gestore cache
         /// </summary>
-        /// <param name="logger">Il logger per la registrazione delle operazioni.</param>
-        /// <param name="cacheProvider">Il provider di cache da utilizzare.</param>
         protected BaseCacheManager(ILogger logger, ICacheProvider cacheProvider)
         {
-            _logger = logger;
-            _cacheProvider = cacheProvider;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
         }
 
         /// <summary>
-        /// Verifica in modo asincrono se una chiave esiste nella cache.
+        /// Verifica l'esistenza di una chiave nella cache
         /// </summary>
-        /// <param name="key">La chiave da verificare.</param>
-        /// <returns>
-        /// Un Task che restituisce True se la chiave esiste, altrimenti False.
-        /// </returns>
         public virtual async Task<bool> ExistsAsync(string key)
         {
+            ValidateKey(key);
             return await _cacheProvider.ExistsAsync(key);
         }
 
         /// <summary>
-        /// Ottiene in modo asincrono un valore dalla cache.
+        /// Valida il formato delle chiavi di cache
         /// </summary>
-        /// <typeparam name="T">Il tipo del valore da ottenere.</typeparam>
-        /// <param name="key">La chiave associata al valore.</param>
-        /// <returns>
-        /// Un Task che restituisce il valore associato alla chiave, oppure il valore di default se non presente.
-        /// </returns>
-        public virtual async Task<T?> GetAsync<T>(string key)
+        protected virtual void ValidateKey(string key)
         {
-            return await _cacheProvider.GetAsync<T>(key);
-        }
-
-        /// <summary>
-        /// Imposta in modo asincrono un valore nella cache.
-        /// </summary>
-        /// <typeparam name="T">Il tipo del valore da impostare.</typeparam>
-        /// <param name="key">La chiave per il valore.</param>
-        /// <param name="value">Il valore da impostare.</param>
-        /// <param name="expiry">La durata dopo la quale il valore scade.</param>
-        /// <returns>
-        /// Un Task che rappresenta l'operazione asincrona di impostazione.
-        /// </returns>
-        public virtual async Task SetAsync<T>(string key, T value, TimeSpan expiry)
-        {
-            await _cacheProvider.SetAsync(key, value, expiry);
-        }
-
-        /// <summary>
-        /// Rimuove in modo asincrono un valore dalla cache.
-        /// </summary>
-        /// <param name="key">La chiave del valore da rimuovere.</param>
-        /// <returns>
-        /// Un Task che rappresenta l'operazione asincrona di rimozione.
-        /// </returns>
-        public virtual async Task RemoveAsync(string key)
-        {
-            await _cacheProvider.RemoveAsync(key);
-        }
-
-        /// <summary>
-        /// Svuota in modo asincrono tutti i valori presenti nella cache.
-        /// </summary>
-        /// <returns>
-        /// Un Task che rappresenta l'operazione asincrona di svuotamento della cache.
-        /// </returns>
-        public virtual async Task ClearAllAsync()
-        {
-            await _cacheProvider.ClearAllAsync();
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Chiave non valida", nameof(key));
         }
     }
 }
