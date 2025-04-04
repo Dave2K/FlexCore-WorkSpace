@@ -1,207 +1,170 @@
-﻿using System;
+﻿using StackExchange.Redis;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using StackExchange.Redis;
+using FlexCore.Caching.Core.Interfaces;
 
 namespace FlexCore.Caching.Redis
 {
     /// <summary>
-    /// Fornisce un'implementazione thread-safe per l'interazione con Redis
+    /// Implementazione di un provider di cache basato su Redis
     /// </summary>
-    /// <remarks>
-    /// Implementa il pattern IDisposable per la gestione corretta delle risorse.
-    /// Supporta operazioni CRUD, Pub/Sub e gestione avanzata delle connessioni.
-    /// </remarks>
-    public sealed class RedisCacheProvider : IDisposable
+    public class RedisCacheProvider : ICacheProvider, IDisposable
     {
         private readonly IConnectionMultiplexer _connection;
         private readonly ILogger<RedisCacheProvider> _logger;
-        private bool _disposed;
+        private readonly IDatabase _database;
+        private readonly JsonSerializerOptions _serializerOptions;
 
         /// <summary>
-        /// Inizializza una nuova istanza della classe <see cref="RedisCacheProvider"/>
+        /// Inizializza una nuova istanza del provider Redis
         /// </summary>
-        /// <param name="connectionString">Stringa di connessione Redis nel formato 'host:port'</param>
-        /// <param name="logger">Istanza del logger per il tracciamento delle attività</param>
-        /// <param name="connection">Istanza opzionale di connessione (usata principalmente per i test)</param>
-        /// <exception cref="ArgumentNullException">Se <paramref name="connectionString"/> o <paramref name="logger"/> sono null</exception>
+        /// <param name="connectionString">Stringa di connessione Redis</param>
+        /// <param name="logger">Istanza del logger</param>
+        /// <param name="connection">Connessione Redis esistente (opzionale)</param>
+        /// <param name="serializerOptions">Opzioni di serializzazione JSON (opzionale)</param>
+        /// <exception cref="RedisConnectionException">Errore durante la connessione a Redis</exception>
         public RedisCacheProvider(
             string connectionString,
             ILogger<RedisCacheProvider> logger,
-            IConnectionMultiplexer? connection = null)
+            IConnectionMultiplexer? connection = null,
+            JsonSerializerOptions? serializerOptions = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _serializerOptions = serializerOptions ?? new JsonSerializerOptions();
 
-            var config = new ConfigurationOptions
+            try
             {
-                EndPoints = { connectionString },
-                AbortOnConnectFail = false,
-                ConnectRetry = 3,
-                ConnectTimeout = 5000
-            };
-
-            _connection = connection ?? ConnectionMultiplexer.Connect(config);
-
-            _connection.ConnectionFailed += (_, e) =>
-                _logger.LogError(e.Exception, "Connessione Redis interrotta: {FailureType}", e.FailureType);
-
-            _connection.ConnectionRestored += (_, _) =>
-                _logger.LogInformation("Connessione Redis ripristinata");
+                _connection = connection ?? ConnectionMultiplexer.Connect(connectionString);
+                _database = _connection.GetDatabase();
+                _logger.LogInformation("Connesso a Redis su {Endpoint}", _connection.GetEndPoints().First());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Connessione fallita a Redis");
+                throw new RedisConnectionException(
+                    ConnectionFailureType.UnableToConnect,
+                    "Errore di connessione a Redis",
+                    ex);
+            }
         }
 
         /// <summary>
-        /// Ottiene il database Redis predefinito (db 0)
-        /// </summary>
-        public IDatabase Database => _connection.GetDatabase();
-
-        /// <summary>
-        /// Verifica se la connessione a Redis è attiva
-        /// </summary>
-        public bool IsConnected => _connection.IsConnected;
-
-        /// <summary>
-        /// Verifica in modo asincrono l'esistenza di una chiave
+        /// Verifica l'esistenza di una chiave nella cache
         /// </summary>
         /// <param name="key">Chiave da verificare</param>
-        /// <returns>Task che restituisce true se la chiave esiste</returns>
-        /// <exception cref="ArgumentException">Se <paramref name="key"/> è null o vuoto</exception>
+        /// <returns>True se la chiave esiste</returns>
         public async Task<bool> ExistsAsync(string key)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentException("Chiave non valida", nameof(key));
-
-            return await Database.KeyExistsAsync(key).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Ottiene in modo asincrono il valore associato a una chiave
-        /// </summary>
-        /// <typeparam name="T">Tipo dell'oggetto da deserializzare</typeparam>
-        /// <param name="key">Chiave da cui recuperare il valore</param>
-        /// <returns>Valore deserializzato o default se non trovato</returns>
-        /// <exception cref="ArgumentException">Se <paramref name="key"/> è null o vuoto</exception>
-        public async Task<T?> GetAsync<T>(string key)
-        {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentException("Chiave non valida", nameof(key));
-
             try
             {
-                var value = await Database.StringGetAsync(key).ConfigureAwait(false);
-                return value.HasValue
-                    ? JsonSerializer.Deserialize<T>(value.ToString())
-                    : default;
+                return await _database.KeyExistsAsync(key);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Errore durante il recupero della chiave {Key}", key);
-                return default;
-            }
-        }
-
-        /// <summary>
-        /// Imposta in modo asincrono un valore con scadenza
-        /// </summary>
-        /// <typeparam name="T">Tipo dell'oggetto da serializzare</typeparam>
-        /// <param name="key">Chiave da impostare</param>
-        /// <param name="value">Valore da memorizzare</param>
-        /// <param name="expiry">Durata di validità</param>
-        /// <returns>True se l'operazione è riuscita</returns>
-        /// <exception cref="ArgumentException">Se <paramref name="key"/> è null o vuoto</exception>
-        public async Task<bool> SetAsync<T>(string key, T value, TimeSpan expiry)
-        {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentException("Chiave non valida", nameof(key));
-
-            try
-            {
-                var serializedValue = JsonSerializer.Serialize(value);
-                return await Database.StringSetAsync(
-                    key,
-                    serializedValue,
-                    expiry,
-                    When.Always,
-                    CommandFlags.None
-                ).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Errore durante il salvataggio della chiave {Key}", key);
+                _logger.LogError(ex, "Errore durante ExistsAsync per la chiave {Key}", key);
                 return false;
             }
         }
 
         /// <summary>
-        /// Rimuove in modo asincrono una chiave
+        /// Ottiene un valore dalla cache
         /// </summary>
-        /// <param name="key">Chiave da rimuovere</param>
-        /// <returns>True se la chiave è stata rimossa</returns>
-        /// <exception cref="ArgumentException">Se <paramref name="key"/> è null o vuoto</exception>
-        public async Task<bool> RemoveAsync(string key)
+        /// <typeparam name="T">Tipo del valore da deserializzare</typeparam>
+        /// <param name="key">Chiave associata al valore</param>
+        /// <returns>Valore deserializzato o default</returns>
+        public async Task<T?> GetAsync<T>(string key)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentException("Chiave non valida", nameof(key));
-
-            return await Database.KeyDeleteAsync(key).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Pubblica un messaggio su un canale Pub/Sub
-        /// </summary>
-        /// <param name="channel">Nome del canale</param>
-        /// <param name="message">Messaggio da pubblicare</param>
-        /// <returns>Numero di client che hanno ricevuto il messaggio</returns>
-        public async Task<long> PublishAsync(string channel, string message)
-        {
-            var sub = _connection.GetSubscriber();
-            return await sub.PublishAsync(
-                RedisChannel.Literal(channel),
-                message,
-                CommandFlags.None
-            ).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Sottoscrive un canale Pub/Sub
-        /// </summary>
-        /// <param name="channel">Nome del canale</param>
-        /// <param name="messageHandler">Handler per i messaggi ricevuti</param>
-        public void Subscribe(string channel, Action<string, string?> messageHandler)
-        {
-            var sub = _connection.GetSubscriber();
-            sub.Subscribe(
-                RedisChannel.Literal(channel),
-                (_, value) => messageHandler(channel, value.ToString())
-            );
-        }
-
-        /// <summary>
-        /// Svuota tutti i database Redis
-        /// </summary>
-        public async Task FlushAllAsync()
-        {
-            var endpoints = _connection.GetEndPoints();
-            foreach (var endpoint in endpoints)
+            try
             {
-                var server = _connection.GetServer(endpoint);
-                await server.FlushAllDatabasesAsync().ConfigureAwait(false);
+                var redisValue = await _database.StringGetAsync(key);
+                if (redisValue.IsNullOrEmpty)
+                {
+                    _logger.LogDebug("Chiave {Key} non trovata", key);
+                    return default;
+                }
+
+                // Ottimizzazione per stringhe
+                if (typeof(T) == typeof(string))
+                    return (T)(object)redisValue.ToString();
+
+                return JsonSerializer.Deserialize<T>(redisValue.ToString(), _serializerOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante GetAsync per la chiave {Key}", key);
+                return default;
             }
         }
 
         /// <summary>
-        /// Rilascia le risorse gestite dalla connessione
+        /// Imposta un valore nella cache
         /// </summary>
-        /// <remarks>
-        /// Metodo idempotente: può essere chiamato multipli volte senza effetti collaterali
-        /// </remarks>
+        /// <typeparam name="T">Tipo del valore da serializzare</typeparam>
+        public async Task<bool> SetAsync<T>(string key, T value, TimeSpan expiry)
+        {
+            try
+            {
+                var serializedValue = JsonSerializer.Serialize(value, _serializerOptions);
+                return await _database.StringSetAsync(key, serializedValue, expiry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante SetAsync per la chiave {Key}", key);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Rimuove una chiave dalla cache
+        /// </summary>
+        /// <param name="key">Chiave da rimuovere</param>
+        public async Task<bool> RemoveAsync(string key)
+        {
+            try
+            {
+                return await _database.KeyDeleteAsync(key);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante RemoveAsync per la chiave {Key}", key);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Svuota completamente la cache
+        /// </summary>
+        public async Task ClearAllAsync()
+        {
+            try
+            {
+                foreach (var endpoint in _connection.GetEndPoints())
+                {
+                    var server = _connection.GetServer(endpoint);
+                    await server.FlushAllDatabasesAsync();
+                }
+                _logger.LogInformation("Cache svuotata");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Errore durante ClearAllAsync");
+                throw new RedisConnectionException(
+                    ConnectionFailureType.UnableToConnect,
+                    "Errore durante lo svuotamento",
+                    ex);
+            }
+        }
+
+        /// <summary>
+        /// Rilascia le risorse della connessione
+        /// </summary>
         public void Dispose()
         {
-            if (_disposed) return;
-
-            _connection.Close();
-            _connection.Dispose();
-            _disposed = true;
+            _connection?.Close();
+            _connection?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Xunit;
-using Moq;
 using Microsoft.Extensions.Caching.Memory;
+using Moq;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -8,45 +8,50 @@ using System.Threading.Tasks;
 namespace FlexCore.Caching.Memory.Tests
 {
     /// <summary>
-    /// Test per la classe <see cref="MemoryCacheProvider"/>
+    /// Test suite per la classe <see cref="MemoryCacheProvider"/>
     /// </summary>
     public class MemoryCacheProviderTests
     {
         /// <summary>
-        /// Verifica il salvataggio di una chiave valida
+        /// Verifica il comportamento di ClearAllAsync con cache vuota
         /// </summary>
         [Fact]
-        public async Task SetAsync_ValidKey_ReturnsTrue()
+        public async Task ClearAllAsync_OnEmptyCache_ShouldNotThrow()
         {
             // Arrange
             var cache = new MemoryCache(new MemoryCacheOptions());
             var logger = Mock.Of<ILogger<MemoryCacheProvider>>();
             var provider = new MemoryCacheProvider(cache, logger);
 
-            // Act
-            var result = await provider.SetAsync("test_key", "valore", TimeSpan.FromMinutes(1));
-
-            // Assert
-            Assert.True(result);
+            // Act & Assert
+            await provider.ClearAllAsync();
         }
 
         /// <summary>
-        /// Verifica la rimozione di una chiave esistente
+        /// Verifica il logging degli errori durante le operazioni
         /// </summary>
         [Fact]
-        public async Task RemoveAsync_ExistingKey_ReturnsTrue()
+        public async Task SetAsync_OnError_ShouldLogError()
         {
             // Arrange
-            var cache = new MemoryCache(new MemoryCacheOptions());
-            cache.Set("test_key", "valore");
-            var logger = Mock.Of<ILogger<MemoryCacheProvider>>();
-            var provider = new MemoryCacheProvider(cache, logger);
+            var faultyCache = new Mock<IMemoryCache>();
+            faultyCache.Setup(c => c.CreateEntry(It.IsAny<object>()))
+                      .Throws(new Exception("Simulated error"));
+
+            var loggerMock = new Mock<ILogger<MemoryCacheProvider>>();
+            var provider = new MemoryCacheProvider(faultyCache.Object, loggerMock.Object);
 
             // Act
-            var result = await provider.RemoveAsync("test_key");
+            await provider.SetAsync("key", "value", TimeSpan.Zero);
 
             // Assert
-            Assert.True(result);
+            loggerMock.Verify(x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+            ));
         }
     }
 }
