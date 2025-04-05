@@ -1,21 +1,40 @@
-﻿using System;
+﻿using FlexCore.Caching.Common.Exceptions;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace FlexCore.Caching.Redis
 {
     /// <summary>
-    /// Rappresenta un errore specifico verificatosi durante le operazioni Redis
+    /// Eccezione sollevata per errori specifici del provider Redis.
     /// </summary>
     /// <remarks>
-    /// Estende <see cref="Exception"/> per fornire contesto aggiuntivo sugli errori Redis
+    /// Estende <see cref="CacheException"/> per fornire contesto aggiuntivo.
     /// </remarks>
-    public class RedisCacheException : Exception
+    public class RedisCacheException : CacheException
     {
         /// <summary>
-        /// Inizializza una nuova istanza della classe con messaggio ed eccezione interna
+        /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
         /// </summary>
-        /// <param name="message">Messaggio descrittivo dell'errore</param>
-        /// <param name="innerException">Eccezione originale che ha causato l'errore</param>
-        public RedisCacheException(string message, Exception innerException)
-            : base(message, innerException) { }
+        /// <param name="logger">Logger per tracciare l'errore.</param>
+        /// <param name="message">Messaggio descrittivo dell'errore.</param>
+        /// <param name="inner">Eccezione interna originale.</param>
+        public RedisCacheException(
+            ILogger<RedisCacheException> logger,
+            string message,
+            Exception inner)
+            : base(message, inner)
+        {
+            logger.LogError(inner, "Errore Redis: {Message}", message);
+        }
+
+        /// <summary>
+        /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
+        /// </summary>
+        /// <param name="message">Messaggio descrittivo dell'errore.</param>
+        /// <param name="inner">Eccezione interna originale.</param>
+        public RedisCacheException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
     }
 }
