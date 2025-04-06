@@ -14,8 +14,7 @@ namespace FlexCore.Caching.Common.Tests
         [InlineData("12345")]
         public void ValidateKey_ValidKeys_ShouldNotThrow(string key)
         {
-            // Act & Assert
-            CacheKeyValidator.ValidateKey(key); // Nessuna eccezione = test passa
+            CacheKeyValidator.ThrowIfInvalid(key); // ✅ Sostituito ValidateKey
         }
 
         [Theory]
@@ -25,25 +24,22 @@ namespace FlexCore.Caching.Common.Tests
         [InlineData("key/with/slash")]
         public void ValidateKey_InvalidCharacters_ShouldThrow(string key)
         {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => CacheKeyValidator.ValidateKey(key));
+            Assert.Throws<ArgumentException>(() =>
+                CacheKeyValidator.ThrowIfInvalid(key)); // ✅ Sostituito ValidateKey
         }
 
         [Fact]
         public void ValidateKey_MaxLengthBoundary_ShouldNotThrow()
         {
-            // Arrange
             var key = new string('a', 128);
-
-            // Act & Assert
-            CacheKeyValidator.ValidateKey(key); // Nessuna eccezione
+            CacheKeyValidator.ThrowIfInvalid(key); // ✅ Sostituito ValidateKey
         }
 
         [Fact]
         public void ValidateKey_EmptyKey_ShouldThrow()
         {
-            // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => CacheKeyValidator.ValidateKey(null!));
+            Assert.Throws<ArgumentNullException>(() =>
+                CacheKeyValidator.ThrowIfInvalid(null!)); // ✅ Sostituito ValidateKey
         }
     }
 }

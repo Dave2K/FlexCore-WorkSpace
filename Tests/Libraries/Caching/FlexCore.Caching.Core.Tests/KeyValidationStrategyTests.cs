@@ -1,5 +1,4 @@
 ﻿using FlexCore.Caching.Common.Validators;
-using FlexCore.Caching.Core;
 using FlexCore.Caching.Core.Interfaces;
 using FlexCore.Caching.Memory;
 using FlexCore.Caching.Redis;
@@ -8,77 +7,81 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
 using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace FlexCore.Caching.Core.Tests
 {
     /// <summary>
-    /// Verifica che la validazione delle chiavi sia centralizzata e applicata coerentemente
+    /// Verifica la strategia centralizzata di validazione delle chiavi di cache.
     /// </summary>
     public class KeyValidationStrategyTests
     {
         /// <summary>
-        /// Verifica che TUTTI i provider utilizzino esclusivamente CacheKeyValidator
+        /// Verifica che i provider utilizzino il validatore centralizzato per le chiavi.
         /// </summary>
+        /// <param name="providerType">Tipo del provider da testare (MemoryCacheProvider/RedisCacheProvider).</param>
         [Theory]
         [InlineData(typeof(MemoryCacheProvider))]
         [InlineData(typeof(RedisCacheProvider))]
-        public void Providers_ShouldUseOnlyCentralValidator(Type providerType)
+        public async Task Providers_ShouldUseCentralValidatorAsync(Type providerType)
         {
             // Arrange
             var provider = CreateProvider(providerType);
-            var invalidKey = "invalid key!";
+            const string invalidKey = "invalid key!";
 
-            // Act/Assert
-            var ex = Assert.ThrowsAsync<ArgumentException>(
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<ArgumentException>( // ✅ Rimosso ConfigureAwait
                 () => provider.ExistsAsync(invalidKey)
-            ).Result;
+            );
 
             Assert.Contains("CacheKeyValidator", ex.Message);
         }
 
         /// <summary>
-        /// Verifica che BaseCacheManager non esegua validazioni autonome
+        /// Verifica che BaseCacheManager non implementi logiche autonome di validazione.
         /// </summary>
         [Fact]
         public void BaseCacheManager_ShouldNotImplementCustomValidation()
         {
-            // Arrange
-            var managerMethods = typeof(BaseCacheManager).GetMethods();
-
             // Act
-            var validationMethods = managerMethods
-                .Where(m => m.Name.Contains("ValidateKey"))
-                .ToList();
+            var managerMethods = typeof(BaseCacheManager).GetMethods();
+            var validationMethods = Array.FindAll(
+                managerMethods,
+                m => m.Name.Contains("ValidateKey", StringComparison.Ordinal)
+            );
 
             // Assert
             Assert.Empty(validationMethods);
         }
 
         /// <summary>
-        /// Verifica il pattern di validazione centralizzato su tutti i metodi
+        /// Verifica il comportamento del validatore centrale con diversi tipi di chiavi.
         /// </summary>
+        /// <param name="key">Chiave da validare.</param>
+        /// <param name="isValid">Indica se la chiave è attesa come valida.</param>
         [Theory]
         [InlineData("ValidKey", true)]
         [InlineData("invalid key!", false)]
         [InlineData("", false)]
         [InlineData(null!, false)]
-        public void CentralValidator_ShouldHandleAllCases(string key, bool isValid)
+        public void CentralValidator_ShouldHandleAllCases(string? key, bool isValid)
         {
-            // Act/Assert
             if (isValid)
             {
-                CacheKeyValidator.ValidateKey(key);
-                Assert.True(true);
+                CacheKeyValidator.ThrowIfInvalid(key!);
             }
             else
             {
-                Assert.Throws<ArgumentException>(
-                    () => CacheKeyValidator.ValidateKey(key)
-                );
+                Assert.Throws<ArgumentException>(() => CacheKeyValidator.ThrowIfInvalid(key!));
             }
         }
 
+        /// <summary>
+        /// Crea un'istanza del provider specificato per i test.
+        /// </summary>
+        /// <param name="providerType">Tipo del provider (MemoryCacheProvider/RedisCacheProvider).</param>
+        /// <returns>Istanza configurata del provider.</returns>
         private ICacheProvider CreateProvider(Type providerType)
         {
             if (providerType == typeof(MemoryCacheProvider))
@@ -104,7 +107,7 @@ namespace FlexCore.Caching.Core.Tests
                 );
             }
 
-            throw new NotSupportedException();
+            throw new NotSupportedException($"Provider non supportato: {providerType.Name}");
         }
     }
 }

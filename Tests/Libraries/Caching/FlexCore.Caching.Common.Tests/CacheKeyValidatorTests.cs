@@ -13,7 +13,7 @@ namespace FlexCore.Caching.Common.Tests
             var key = new string('a', 128);
 
             // Act & Assert
-            CacheKeyValidator.ValidateKey(key);
+            CacheKeyValidator.ThrowIfInvalid(key); // ✅ Sostituito ValidateKey
         }
 
         [Theory]
@@ -22,7 +22,9 @@ namespace FlexCore.Caching.Common.Tests
         [InlineData("key with spaces")]
         public void ValidateKey_InvalidCharacters_ShouldThrow(string key)
         {
-            Assert.Throws<ArgumentException>(() => CacheKeyValidator.ValidateKey(key));
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() =>
+                CacheKeyValidator.ThrowIfInvalid(key)); // ✅ Sostituito ValidateKey
         }
     }
 }
