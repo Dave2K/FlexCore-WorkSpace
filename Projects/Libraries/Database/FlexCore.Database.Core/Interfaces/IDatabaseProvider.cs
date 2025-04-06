@@ -4,50 +4,74 @@ using System.Threading.Tasks;
 namespace FlexCore.Database.Core.Interfaces
 {
     /// <summary>
-    /// Interfaccia base per tutti i provider di database.
+    /// Interfaccia base per tutti i provider di database
     /// </summary>
     public interface IDatabaseProvider
     {
         /// <summary>
-        /// Apre una connessione al database.
+        /// Apre una connessione al database
         /// </summary>
-        /// <param name="connectionString">Stringa di connessione.</param>
+        /// <param name="connectionString">Stringa di connessione</param>
         void Connect(string connectionString);
 
         /// <summary>
-        /// Esegue una query e restituisce un IDataReader.
-        /// </summary>
-        /// <param name="query">Comando SQL da eseguire.</param>
-        IDataReader ExecuteQuery(string query);
-
-        /// <summary>
-        /// Esegue un comando non query (es. INSERT, UPDATE, DELETE).
-        /// </summary>
-        /// <param name="command">Comando SQL da eseguire.</param>
-        int ExecuteNonQuery(string command);
-
-        /// <summary>
-        /// Chiude la connessione al database.
+        /// Chiude la connessione corrente
         /// </summary>
         void Disconnect();
 
         /// <summary>
-        /// Crea un parametro per query parametrizzate.
+        /// Esegue un comando SQL senza parametri
         /// </summary>
-        /// <param name="name">Nome del parametro.</param>
-        /// <param name="value">Valore del parametro.</param>
+        int ExecuteNonQuery(string command);
+
+        /// <summary>
+        /// Esegue un comando SQL con parametri
+        /// </summary>
+        int ExecuteNonQuery(string command, params IDbDataParameter[] parameters);
+
+        /// <summary>
+        /// Esegue una query SQL senza parametri
+        /// </summary>
+        IDataReader ExecuteQuery(string query);
+
+        /// <summary>
+        /// Esegue una query SQL con parametri
+        /// </summary>
+        IDataReader ExecuteQuery(string query, params IDbDataParameter[] parameters);
+
+        /// <summary>
+        /// Esegue una query e restituisce un singolo valore
+        /// </summary>
+        T ExecuteScalar<T>(string query);
+
+        /// <summary>
+        /// Crea un parametro per query
+        /// </summary>
         IDbDataParameter CreateParameter(string name, object value);
 
         /// <summary>
-        /// Crea una connessione al database senza aprirla.
+        /// Crea una connessione non aperta
         /// </summary>
-        /// <param name="connectionString">Stringa di connessione.</param>
         IDbConnection CreateConnection(string connectionString);
 
         /// <summary>
-        /// Apre una connessione in modo asincrono.
+        /// Verifica se è presente una transazione attiva
         /// </summary>
-        /// <param name="connection">Connessione da aprire.</param>
-        Task OpenConnectionAsync(IDbConnection connection);
+        bool IsTransactionActive();
+
+        /// <summary>
+        /// Avvia una nuova transazione
+        /// </summary>
+        void BeginTransaction();
+
+        /// <summary>
+        /// Conferma la transazione corrente
+        /// </summary>
+        void CommitTransaction();
+
+        /// <summary>
+        /// Annulla la transazione corrente
+        /// </summary>
+        void RollbackTransaction();
     }
 }

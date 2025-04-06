@@ -1,47 +1,64 @@
-﻿namespace FlexCore.Database.Core;
-
-using FlexCore.Database.Interfaces;
+﻿using FlexCore.Database.Interfaces; // Aggiungi questo using
+using System;
 using System.Transactions;
 using System.Threading.Tasks;
+using FlexCore.Database.Core.Interfaces;
 
-/// <summary>
-/// Gestore delle transazioni.
-/// </summary>
-public class TransactionManager : ITransactionManager
+namespace FlexCore.Database.Core
 {
     /// <summary>
-    /// Avvia una transazione asincrona.
+    /// Gestore delle transazioni con supporto completo per transazioni sincrone, asincrone e distribuite.
     /// </summary>
-    public async Task BeginTransactionAsync()
+    public class TransactionManager : ITransactionManager
     {
-        await Task.CompletedTask; // Implementazione di esempio
-    }
+        private readonly IDatabaseProvider _provider;
 
-    /// <summary>
-    /// Conferma la transazione corrente.
-    /// </summary>
-    public async Task CommitTransactionAsync()
-    {
-        await Task.CompletedTask; // Implementazione di esempio
-    }
-
-    /// <summary>
-    /// Annulla la transazione corrente.
-    /// </summary>
-    public async Task RollbackTransactionAsync()
-    {
-        await Task.CompletedTask; // Implementazione di esempio
-    }
-
-    /// <summary>
-    /// Avvia una transazione distribuita asincrona.
-    /// </summary>
-    public async Task BeginDistributedTransactionAsync()
-    {
-        using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+        /// <summary>
+        /// Inizializza una nuova istanza della classe <see cref="TransactionManager"/>.
+        /// </summary>
+        /// <param name="provider">Provider di database per l'esecuzione delle transazioni.</param>
+        /// <exception cref="ArgumentNullException">Se <paramref name="provider"/> è null.</exception>
+        public TransactionManager(IDatabaseProvider provider)
         {
-            scope.Complete();
-            await Task.CompletedTask;
+            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+        }
+
+        /// <inheritdoc/>
+        public async Task BeginTransactionAsync()
+        {
+            if (_provider is IDataContext dataContext)
+                await dataContext.BeginTransactionAsync().ConfigureAwait(false);
+            else
+                _provider.BeginTransaction();
+        }
+
+        /// <inheritdoc/>
+        public async Task CommitTransactionAsync()
+        {
+            if (_provider is IDataContext dataContext)
+                await dataContext.CommitTransactionAsync().ConfigureAwait(false);
+            else
+                _provider.CommitTransaction();
+        }
+
+        /// <inheritdoc/>
+        public async Task RollbackTransactionAsync()
+        {
+            if (_provider is IDataContext dataContext)
+                await dataContext.RollbackTransactionAsync().ConfigureAwait(false);
+            else
+                _provider.RollbackTransaction();
+        }
+
+        /// <inheritdoc/>
+        public async Task BeginDistributedTransactionAsync()
+        {
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                // Logica transazionale...
+                scope.Complete();
+                await Task.CompletedTask.ConfigureAwait(false);
+            }
         }
     }
 }

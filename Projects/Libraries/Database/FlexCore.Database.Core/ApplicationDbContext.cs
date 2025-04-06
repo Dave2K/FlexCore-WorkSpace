@@ -1,64 +1,50 @@
-namespace FlexCore.Database.Core;
-
-using FlexCore.Database.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
+using FlexCore.Database.Interfaces; // Aggiungi questo using mancante
 
-/// <summary>
-/// Contesto database principale con gestione delle transazioni.
-/// </summary>
-public class ApplicationDbContext : DbContext, IUnitOfWork
+namespace FlexCore.Database.Core
 {
     /// <summary>
-    /// Inizializza una nuova istanza della classe <see cref="ApplicationDbContext"/>.
+    /// Contesto database principale con gestione delle transazioni
     /// </summary>
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
+    public class ApplicationDbContext : DbContext, IDataContext
     {
-    }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    /// <summary>
-    /// Avvia una transazione nel database.
-    /// </summary>
-    public void BeginTransaction() => Database.BeginTransaction();
+        // Implementazione esplicita per salvataggio asincrono
+        Task<int> IDataContext.SaveChangesAsync() => base.SaveChangesAsync();
 
-    /// <summary>
-    /// Conferma la transazione in corso.
-    /// </summary>
-    public void CommitTransaction()
-    {
-        if (Database.CurrentTransaction != null)
+        /// <inheritdoc/>
+        public void BeginTransaction() => Database.BeginTransaction();
+
+        /// <inheritdoc/>
+        public async Task BeginTransactionAsync() => await Database.BeginTransactionAsync().ConfigureAwait(false);
+
+        /// <inheritdoc/>
+        public void CommitTransaction() => Database.CommitTransaction();
+
+        /// <inheritdoc/>
+        public async Task CommitTransactionAsync() => await Database.CommitTransactionAsync().ConfigureAwait(false);
+
+        /// <inheritdoc/>
+        public void RollbackTransaction() => Database.RollbackTransaction();
+
+        /// <inheritdoc/>
+        public async Task RollbackTransactionAsync() => await Database.RollbackTransactionAsync().ConfigureAwait(false);
+
+        /// <inheritdoc/>
+        public override int SaveChanges() => base.SaveChanges();
+
+        /// <inheritdoc/>
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+            => base.SaveChangesAsync(cancellationToken);
+
+        /// <inheritdoc/>
+        public override void Dispose()
         {
-            Database.CurrentTransaction.Commit();
-            Database.CurrentTransaction.Dispose();
+            base.Dispose();
+            GC.SuppressFinalize(this);
         }
-    }
-
-    /// <summary>
-    /// Annulla la transazione in corso.
-    /// </summary>
-    public void RollbackTransaction()
-    {
-        if (Database.CurrentTransaction != null)
-        {
-            Database.CurrentTransaction.Rollback();
-            Database.CurrentTransaction.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Salva le modifiche nel database in modo asincrono.
-    /// </summary>
-    public async Task<int> SaveChangesAsync()
-        => await base.SaveChangesAsync().ConfigureAwait(false);
-
-    /// <summary>
-    /// Rilascia le risorse gestite.
-    /// </summary>
-    public override void Dispose()
-    {
-        base.Dispose(); // Eliminazione gestita da EF Core
-        GC.SuppressFinalize(this);
     }
 }

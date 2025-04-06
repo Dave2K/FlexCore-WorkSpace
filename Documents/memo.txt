@@ -1,3 +1,84 @@
+Principali incongruenze riscontrate:
+1. Transazioni asincrone non implementate correttamente
+File: TransactionManager.cs
+I metodi asincroni come BeginTransactionAsync e CommitTransactionAsync restituiscono Task.CompletedTask senza logica reale.
+Soluzione: Implementare metodi asincroni che interagiscano con il database (es. await Database.BeginTransactionAsync()).
+
+2. Cast specifico del provider in DbConnectionFactory
+File: DbConnectionFactory.cs
+Il metodo CreateConnectionAsync esegue un cast a SqlConnection, rendendolo incompatibile con altri provider (es. SQLite).
+Soluzione: Rimuovere il cast e utilizzare IDbConnection in modo generico o rendere il metodo astratto.
+
+3. Responsabilità duplicata tra IUnitOfWork e IDataContext
+File: ApplicationDbContext.cs, UnitOfWorkBase.cs
+ApplicationDbContext implementa IUnitOfWork, mentre UnitOfWorkBase delega a IDataContext.
+Soluzione: Separare chiaramente i ruoli: IDataContext per l'accesso diretto, IUnitOfWork per la gestione delle transazioni.
+
+4. Inconsistenza nel percorso delle risorse (WSEnvironment)
+File: Directory.Build.props, SQLServerProviderTests.cs
+Il percorso WorkSpace.Generated.WSEnvironment.ResourcesFolder è usato nei test, ma la generazione di WSEnvironment è disabilitata nel file principale.
+Soluzione: Scommentare <GenerateWSEnvironment>true</GenerateWSEnvironment> o correggere i percorsi nei test.
+
+5. Disposizione prematura dei comandi SQL
+File: SQLiteDatabaseProvider.cs, SQLServerDatabaseProvider.cs
+I metodi ExecuteQuery creano un comando con using, ma restituiscono un IDataReader che dipende dal comando già eliminato.
+Soluzione: Non usare using per i comandi se il reader è esposto; gestire il ciclo di vita manualmente.
+
+6. Namespace e struttura delle cartelle non allineati
+File: SQLiteProviderTests.cs
+Il namespace FlexCore.Core.Utilities non corrisponde al percorso del file (FlexCore.Database.SQLite.Tests).
+Soluzione: Correggere il namespace per riflettere la posizione effettiva del file.
+
+7. Mancanza di token di annullamento nei metodi asincroni
+File: IRepository.cs
+I metodi async come GetAllAsync non accettano CancellationToken.
+Soluzione: Aggiungere parametri CancellationToken alle interfacce e implementazioni.
+
+8. Incoerenza nelle versioni dei pacchetti
+File: Directory.Build.props, FlexCore.Database.SQLServer.Tests.csproj
+Alcuni test usano Microsoft.Data.SqlClient (v6.0.1), mentre altri progetti usano Microsoft.EntityFrameworkCore.Sqlite (v9.0.3).
+Soluzione: Allineare tutte le dipendenze alla stessa versione principale (es. 9.0.x).
+
+9. Problemi di generazione dell'ambiente (WSEnvironment)
+File: Directory.Build.targets, appsettings.json
+I placeholder come {TempFolder} non vengono sostituiti se GenerateWSEnvironment non è attivo.
+Soluzione: Abilitare la generazione o utilizzare percorsi assoluti/relativi nei test.
+
+10. Mix di lingue nei commenti
+File: Varie
+Alcuni commenti sono in italiano, altri in inglese.
+Soluzione: Standardizzare l’uso dell’inglese per tutti i commenti.
+
+Suggerimenti aggiuntivi:
+Test asincroni: Implementare test reali per le transazioni distribuite e le operazioni async.
+
+Factory pattern: Sostituire la DatabaseFactory statica con un’interfaccia per migliorare la testabilità.
+
+Gestione errori: Aggiungere validazione degli input nelle factory (es. stringhe di connessione vuote).
+
+Documentazione: Aggiungere <remarks> o documentazione XML per chiarire il flusso delle transazioni.
+
+Correzioni prioritarie: Risolvere i problemi di disposizione dei comandi SQL (punto 5) e l’implementazione delle transazioni async (punto 1), in quanto potrebbero causare errori runtime critici.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 i pacchetti messi in .props vengono inglobati in ogni progetto ?
 rivedere tutto 
 veedere se c'è un modo di mettere le reference in un file e farle inglobare in ogni progetto

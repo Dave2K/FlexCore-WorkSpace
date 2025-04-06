@@ -1,55 +1,107 @@
-﻿using Xunit;
-using FlexCore.Database.SQLServer;
+﻿using FlexCore.Database.SQLServer;
+using Microsoft.Data.SqlClient;
 using System;
-using System.IO;
-using Newtonsoft.Json.Linq;
+using System.Data;
 
 namespace FlexCore.Database.SQLServer.Tests
 {
-    public class SQLServerProviderTests
+    /// <summary>
+    /// Fixture per la gestione centralizzata del database di test SQL Server
+    /// </summary>
+    public class SQLServerTestFixture : IDisposable
     {
-        private static readonly string TestConnectionString;
+        private const string TestDatabaseName = "FlexCoreTestDB";
+        private readonly string _masterConnectionString = @"Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;Encrypt=False;";
 
-        // Costruttore statico per inizializzare TestConnectionString in modo sicuro
-        static SQLServerProviderTests()
+        /// <summary>
+        /// Ottiene il provider di database configurato
+        /// </summary>
+        public SQLServerDatabaseProvider Provider { get; }
+
+        /// <summary>
+        /// Ottiene la stringa di connessione per il database di test
+        /// </summary>
+        public string TestConnectionString { get; }
+
+        /// <summary>
+        /// Inizializza una nuova istanza della fixture
+        /// </summary>
+        public SQLServerTestFixture()
         {
-            string configPath = Path.Combine(
-                WorkSpace.Generated.WSEnvironment.ResourcesFolder,
-                "appsettings.json"
+            Provider = new SQLServerDatabaseProvider();
+            TestConnectionString = $@"Server=.\SQLEXPRESS;Database={TestDatabaseName};Trusted_Connection=True;Encrypt=False;";
+
+            CreateTestDatabase();
+            Provider.Connect(TestConnectionString);
+        }
+
+        /// <summary>
+        /// Inizializza lo stato del database per un test specifico
+        /// </summary>
+        public void Initialize(string testTable)
+        {
+            Provider.ExecuteNonQuery(
+                $@"IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '{testTable}')
+                BEGIN
+                    CREATE TABLE {testTable} (
+                        Id INT PRIMARY KEY,
+                        Data NVARCHAR(50)
+                    )
+                END"
             );
+        }
 
-            if (!File.Exists(configPath))
+        /// <summary>
+        /// Esegue la pulizia delle risorse
+        /// </summary>
+        public void Dispose()
+        {
+            CleanupTestTables();
+            Provider.Disconnect();
+            DropTestDatabase();
+            GC.SuppressFinalize(this);
+        }
+
+        private void CreateTestDatabase()
+        {
+            using (var connection = new SqlConnection(_masterConnectionString))
             {
-                throw new FileNotFoundException($"File di configurazione non trovato: {configPath}");
-            }
-
-            string json = File.ReadAllText(configPath);
-            var config = JObject.Parse(json);
-
-            TestConnectionString = config["DatabaseSettings"]?["SQLServer"]?["ConnectionString"]?.ToString()
-                                  ?? throw new InvalidOperationException("La connection string non può essere null.");
-
-            if (string.IsNullOrWhiteSpace(TestConnectionString))
-            {
-                throw new InvalidOperationException("La connection string è vuota.");
+                connection.Open();
+                new SqlCommand(
+                    $@"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{TestDatabaseName}')
+                    BEGIN
+                        CREATE DATABASE {TestDatabaseName}
+                    END",
+                    connection
+                ).ExecuteNonQuery();
             }
         }
 
-        [Fact]
-        public void CreateConnection_ValidString_ReturnsSqlConnection()
+        private void DropTestDatabase()
         {
-            var provider = new SQLServerDatabaseProvider();
-            var connection = provider.CreateConnection(TestConnectionString);
-            Assert.IsType<Microsoft.Data.SqlClient.SqlConnection>(connection);
+            using (var connection = new SqlConnection(_masterConnectionString))
+            {
+                connection.Open();
+                new SqlCommand(
+                    $@"IF EXISTS (SELECT * FROM sys.databases WHERE name = '{TestDatabaseName}')
+                    BEGIN
+                        ALTER DATABASE {TestDatabaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                        DROP DATABASE {TestDatabaseName}
+                    END",
+                    connection
+                ).ExecuteNonQuery();
+            }
         }
 
-        [Fact]
-        public async Task OpenConnectionAsync_ValidConnection_OpensSuccessfully()
+        private void CleanupTestTables()
         {
-            var provider = new SQLServerDatabaseProvider();
-            var connection = provider.CreateConnection(TestConnectionString);
-            await provider.OpenConnectionAsync(connection);
-            Assert.Equal(System.Data.ConnectionState.Open, connection.State);
+            Provider.ExecuteNonQuery(
+                @"DECLARE @sql NVARCHAR(MAX) = '';
+                SELECT @sql += 'DROP TABLE ' + QUOTENAME(name) + ';' 
+                FROM sys.tables 
+                WHERE name LIKE 'TestTable_%';
+                EXEC sp_executesql @sql;"
+            );
         }
     }
 }

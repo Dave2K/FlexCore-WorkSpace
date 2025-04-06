@@ -160,6 +160,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Caching.Memory", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Infrastructure.Events.Tests", "..\Tests\Libraries\Infrastructure\FlexCore.Infrastructure.Events.Tests\FlexCore.Infrastructure.Events.Tests.csproj", "{3C9531EA-936D-4884-8FCF-EAB74262C266}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_build", "_build", "{2089F577-176F-4063-96A0-65B351E2EF38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

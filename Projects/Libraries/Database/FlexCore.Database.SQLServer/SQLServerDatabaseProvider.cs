@@ -1,22 +1,18 @@
 using FlexCore.Database.Core.Interfaces;
 using Microsoft.Data.SqlClient;
-using System;
 using System.Data;
-using System.Threading.Tasks;
 
 namespace FlexCore.Database.SQLServer
 {
     /// <summary>
-    /// Implementazione concreta di <see cref="IDatabaseProvider"/> per SQL Server.
+    /// Provider per l'interazione con Microsoft SQL Server
     /// </summary>
     public class SQLServerDatabaseProvider : IDatabaseProvider
     {
         private SqlConnection? _connection;
+        private SqlTransaction? _currentTransaction;
 
-        /// <summary>
-        /// Apre una connessione al database SQL Server.
-        /// </summary>
-        /// <param name="connectionString">Stringa di connessione.</param>
+        /// <inheritdoc/>
         public void Connect(string connectionString)
         {
             Disconnect();
@@ -24,64 +20,90 @@ namespace FlexCore.Database.SQLServer
             _connection.Open();
         }
 
-        /// <summary>
-        /// Esegue una query e restituisce un IDataReader.
-        /// </summary>
-        /// <param name="query">Query SQL da eseguire.</param>
-        public IDataReader ExecuteQuery(string query)
-        {
-            using var command = new SqlCommand(query, _connection);
-            return command.ExecuteReader();
-        }
-
-        /// <summary>
-        /// Esegue un comando non query.
-        /// </summary>
-        /// <param name="command">Comando SQL da eseguire.</param>
-        public int ExecuteNonQuery(string command)
-        {
-            using var cmd = new SqlCommand(command, _connection);
-            return cmd.ExecuteNonQuery();
-        }
-
-        /// <summary>
-        /// Chiude la connessione al database.
-        /// </summary>
+        /// <inheritdoc/>
         public void Disconnect()
         {
             if (_connection?.State != ConnectionState.Closed)
             {
+                RollbackTransaction();
                 _connection?.Close();
                 _connection?.Dispose();
             }
             _connection = null;
         }
 
-        /// <summary>
-        /// Crea un parametro per query.
-        /// </summary>
-        /// <param name="name">Nome del parametro.</param>
-        /// <param name="value">Valore del parametro.</param>
+        /// <inheritdoc/>
+        public int ExecuteNonQuery(string command)
+            => ExecuteNonQuery(command, Array.Empty<IDbDataParameter>());
+
+        /// <inheritdoc/>
+        public int ExecuteNonQuery(string command, params IDbDataParameter[] parameters)
+        {
+            using var cmd = new SqlCommand(command, _connection, _currentTransaction);
+            cmd.Parameters.AddRange(parameters);
+            return cmd.ExecuteNonQuery();
+        }
+
+        /// <inheritdoc/>
+        public IDataReader ExecuteQuery(string query)
+            => ExecuteQuery(query, Array.Empty<IDbDataParameter>());
+
+        /// <inheritdoc/>
+        public IDataReader ExecuteQuery(string query, params IDbDataParameter[] parameters)
+        {
+            var cmd = new SqlCommand(query, _connection, _currentTransaction);
+            cmd.Parameters.AddRange(parameters);
+            return cmd.ExecuteReader();
+        }
+
+        /// <inheritdoc/>
+        public T ExecuteScalar<T>(string query)
+        {
+            using var cmd = new SqlCommand(query, _connection, _currentTransaction);
+            object result = cmd.ExecuteScalar();
+
+            return result == null || result == DBNull.Value
+                ? throw new InvalidOperationException("Il risultato della query è nullo")
+                : (T)Convert.ChangeType(result, typeof(T));
+        }
+
+        /// <inheritdoc/>
         public IDbDataParameter CreateParameter(string name, object value)
             => new SqlParameter(name, value);
 
-        /// <summary>
-        /// Crea una connessione non aperta.
-        /// </summary>
-        /// <param name="connectionString">Stringa di connessione.</param>
+        /// <inheritdoc/>
         public IDbConnection CreateConnection(string connectionString)
             => new SqlConnection(connectionString);
 
-        /// <summary>
-        /// Apre una connessione in modo asincrono.
-        /// </summary>
-        /// <param name="connection">Connessione da aprire.</param>
+        /// <inheritdoc/>
+        public bool IsTransactionActive()
+            => _currentTransaction != null;
+
+        /// <inheritdoc/>
+        public void BeginTransaction()
+            => _currentTransaction = _connection?.BeginTransaction();
+
+        /// <inheritdoc/>
+        public void CommitTransaction()
+        {
+            _currentTransaction?.Commit();
+            _currentTransaction = null;
+        }
+
+        /// <inheritdoc/>
+        public void RollbackTransaction()
+        {
+            _currentTransaction?.Rollback();
+            _currentTransaction = null;
+        }
+
+        /// <inheritdoc/>
         public async Task OpenConnectionAsync(IDbConnection connection)
         {
             if (connection is SqlConnection sqlConn)
                 await sqlConn.OpenAsync();
             else
-                throw new ArgumentException("Connessione non valida per SQL Server");
+                throw new ArgumentException("Tipo di connessione non supportato", nameof(connection));
         }
     }
 }

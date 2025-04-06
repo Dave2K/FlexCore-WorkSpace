@@ -1,37 +1,52 @@
-﻿namespace FlexCore.Database.Interfaces;
-
+﻿// File: FlexCore.Database.Interfaces/IDataContext.cs
 using System;
 using System.Threading.Tasks;
 
-/// <summary>
-/// Interfaccia astratta per l'accesso ai dati, indipendente dal provider di database.
-/// </summary>
-public interface IDataContext : IDisposable
+namespace FlexCore.Database.Interfaces
 {
     /// <summary>
-    /// Avvia una transazione nel database.
+    /// Interfaccia per l'accesso ai dati con gestione transazionale sincrona/asincrona
     /// </summary>
-    void BeginTransaction();
+    public interface IDataContext : IDisposable
+    {
+        /// <summary>
+        /// Avvia una transazione sincrona
+        /// </summary>
+        void BeginTransaction();
 
-    /// <summary>
-    /// Conferma la transazione in corso.
-    /// </summary>
-    void CommitTransaction();
+        /// <summary>
+        /// Avvia una transazione asincrona
+        /// </summary>
+        Task BeginTransactionAsync();
 
-    /// <summary>
-    /// Annulla la transazione in corso.
-    /// </summary>
-    void RollbackTransaction();
+        /// <summary>
+        /// Conferma una transazione sincrona
+        /// </summary>
+        void CommitTransaction();
 
-    /// <summary>
-    /// Salva le modifiche nel database.
-    /// </summary>
-    /// <returns>Numero di record modificati.</returns>
-    int SaveChanges();
+        /// <summary>
+        /// Conferma una transazione asincrona
+        /// </summary>
+        Task CommitTransactionAsync();
 
-    /// <summary>
-    /// Salva le modifiche nel database in modo asincrono.
-    /// </summary>
-    /// <returns>Numero di record modificati.</returns>
-    Task<int> SaveChangesAsync();
+        /// <summary>
+        /// Annulla una transazione sincrona
+        /// </summary>
+        void RollbackTransaction();
+
+        /// <summary>
+        /// Annulla una transazione asincrona
+        /// </summary>
+        Task RollbackTransactionAsync();
+
+        /// <summary>
+        /// Salva le modifiche sincrone
+        /// </summary>
+        int SaveChanges();
+
+        /// <summary>
+        /// Salva le modifiche asincrone
+        /// </summary>
+        Task<int> SaveChangesAsync();
+    }
 }
