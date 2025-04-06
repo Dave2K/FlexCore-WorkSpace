@@ -1,18 +1,22 @@
 ﻿using FlexCore.Database.Core.Interfaces;
 using Microsoft.Data.Sqlite;
+using System;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FlexCore.Database.SQLite
 {
     /// <summary>
-    /// Provider per l'interazione con SQLite
+    /// Provider per l'interazione con SQLite, con implementazione sincrona e asincrona.
     /// </summary>
     public class SQLiteDatabaseProvider : IDatabaseProvider
     {
         private SqliteConnection? _connection;
         private SqliteTransaction? _currentTransaction;
 
-        /// <inheritdoc/>
+        #region Sync Methods
+
         public void Connect(string connectionString)
         {
             Disconnect();
@@ -20,7 +24,6 @@ namespace FlexCore.Database.SQLite
             _connection.Open();
         }
 
-        /// <inheritdoc/>
         public void Disconnect()
         {
             if (_connection?.State != ConnectionState.Closed)
@@ -32,78 +35,164 @@ namespace FlexCore.Database.SQLite
             _connection = null;
         }
 
-        /// <inheritdoc/>
         public int ExecuteNonQuery(string command)
             => ExecuteNonQuery(command, Array.Empty<IDbDataParameter>());
 
-        /// <inheritdoc/>
         public int ExecuteNonQuery(string command, params IDbDataParameter[] parameters)
         {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
             using var cmd = new SqliteCommand(command, _connection, _currentTransaction);
             cmd.Parameters.AddRange(parameters);
             return cmd.ExecuteNonQuery();
         }
 
-        /// <inheritdoc/>
         public IDataReader ExecuteQuery(string query)
             => ExecuteQuery(query, Array.Empty<IDbDataParameter>());
 
-        /// <inheritdoc/>
         public IDataReader ExecuteQuery(string query, params IDbDataParameter[] parameters)
         {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
             var cmd = new SqliteCommand(query, _connection, _currentTransaction);
             cmd.Parameters.AddRange(parameters);
             return cmd.ExecuteReader();
         }
 
-        /// <inheritdoc/>
         public T ExecuteScalar<T>(string query)
         {
-            using var cmd = new SqliteCommand(query, _connection, _currentTransaction);
-            object result = cmd.ExecuteScalar();
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
 
-            return result == null || result == DBNull.Value
-                ? throw new InvalidOperationException("Il risultato della query è nullo")
-                : (T)Convert.ChangeType(result, typeof(T));
+            using var cmd = new SqliteCommand(query, _connection, _currentTransaction);
+            object? result = cmd.ExecuteScalar();
+
+            if (result is null || result == DBNull.Value)
+                throw new InvalidOperationException("Risultato nullo o DBNull");
+
+            return (T)Convert.ChangeType(result, typeof(T));
         }
 
-        /// <inheritdoc/>
         public IDbDataParameter CreateParameter(string name, object value)
             => new SqliteParameter(name, value);
 
-        /// <inheritdoc/>
         public IDbConnection CreateConnection(string connectionString)
             => new SqliteConnection(connectionString);
 
-        /// <inheritdoc/>
         public bool IsTransactionActive()
             => _currentTransaction != null;
 
-        /// <inheritdoc/>
         public void BeginTransaction()
-            => _currentTransaction = _connection?.BeginTransaction();
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
 
-        /// <inheritdoc/>
+            _currentTransaction = _connection.BeginTransaction();
+        }
+
         public void CommitTransaction()
         {
             _currentTransaction?.Commit();
             _currentTransaction = null;
         }
 
-        /// <inheritdoc/>
         public void RollbackTransaction()
         {
             _currentTransaction?.Rollback();
             _currentTransaction = null;
         }
+        #endregion
 
-        /// <inheritdoc/>
-        public async Task OpenConnectionAsync(IDbConnection connection)
+        #region Async Methods
+
+        public async Task OpenConnectionAsync(
+            IDbConnection connection,
+            CancellationToken cancellationToken = default)
         {
             if (connection is SqliteConnection sqliteConn)
-                await sqliteConn.OpenAsync();
+                await sqliteConn.OpenAsync(cancellationToken).ConfigureAwait(false);
             else
-                throw new ArgumentException("Tipo di connessione non supportato", nameof(connection));
+                throw new ArgumentException("Tipo connessione non supportato", nameof(connection));
         }
+
+        public async Task<int> ExecuteNonQueryAsync(
+            string command,
+            CancellationToken cancellationToken = default)
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
+            using var cmd = new SqliteCommand(command, _connection, _currentTransaction);
+            return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<int> ExecuteNonQueryAsync(
+            string command,
+            IDbDataParameter[] parameters,
+            CancellationToken cancellationToken = default)
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
+            using var cmd = new SqliteCommand(command, _connection, _currentTransaction);
+            cmd.Parameters.AddRange(parameters);
+            return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<IDataReader> ExecuteQueryAsync(
+            string query,
+            CancellationToken cancellationToken = default)
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
+            var cmd = new SqliteCommand(query, _connection, _currentTransaction);
+            return await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<IDataReader> ExecuteQueryAsync(
+            string query,
+            IDbDataParameter[] parameters,
+            CancellationToken cancellationToken = default)
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
+            var cmd = new SqliteCommand(query, _connection, _currentTransaction);
+            cmd.Parameters.AddRange(parameters);
+            return await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<T> ExecuteScalarAsync<T>(
+            string query,
+            CancellationToken cancellationToken = default)
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
+            using var cmd = new SqliteCommand(query, _connection, _currentTransaction);
+            object? result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+
+            if (result is null || result == DBNull.Value)
+                throw new InvalidOperationException("Risultato nullo o DBNull");
+
+            return (T)Convert.ChangeType(result, typeof(T));
+        }
+
+        public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            if (_connection == null)
+                throw new InvalidOperationException("Connessione non inizializzata.");
+
+            if (_connection.State != ConnectionState.Open)
+                await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+            _currentTransaction = (SqliteTransaction)await _connection
+                .BeginTransactionAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        #endregion
     }
 }
