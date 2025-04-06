@@ -19,7 +19,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="../../../../Projects/Libraries/Infrastructure/FlexCore.Infrastructure.Commands/FlexCore.Infrastructure.Commands.csproj" />
-		<ProjectReference Include="../../../../Projects/Libraries/Infrastructure/FlexCore.Infrastructure.Events/FlexCore.Infrastructure.Events.csproj" />
+		<ProjectReference Include="..\..\..\..\Projects\Libraries\Infrastructure\FlexCore.Infrastructure.Events\FlexCore.Infrastructure.Events.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,12 +1,13 @@
-di tanti in tanto appare un folder in sources con nome FlexCoreWorkspace
-
+i pacchetti messi in .props vengono inglobati in ogni progetto ?
+rivedere tutto 
+veedere se c'è un modo di mettere le reference in un file e farle inglobare in ogni progetto
 
 
 
  meodo di lavoro: Test-Driven Development (TDD)
 
 
-
+---------------------------------------------------------
 namespace FlexCore.Security.Identity.Models
 {
     public class JwtSettings
@@ -21,6 +22,17 @@ namespace FlexCore.Security.Identity.Models
 il 60 deve essere in config
 
 ---------------------------------------------------------
+
+Implementare i test mancanti
+
+Aggiungere test di integrazione
+
+Implementare test di performance
+
+Aggiungere test di sicurezza
+
+specifiche per come devi rispondere quando generi test
+DARE SEMPRE CODICE COMPLETO DI TUTTI I METODI E CON COMMENTI XML
 
 
 

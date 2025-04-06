@@ -158,6 +158,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Web", "..\Applicat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Caching.Memory", "..\Projects\Libraries\Caching\FlexCore.Caching.Memory\FlexCore.Caching.Memory.csproj", "{85908A67-14E9-6B2C-84B6-5169E1D650E8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Infrastructure.Events.Tests", "..\Tests\Libraries\Infrastructure\FlexCore.Infrastructure.Events.Tests\FlexCore.Infrastructure.Events.Tests.csproj", "{3C9531EA-936D-4884-8FCF-EAB74262C266}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -376,6 +378,10 @@ Global
 		{85908A67-14E9-6B2C-84B6-5169E1D650E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{85908A67-14E9-6B2C-84B6-5169E1D650E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{85908A67-14E9-6B2C-84B6-5169E1D650E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -450,6 +456,7 @@ Global
 		{F8F4C825-7DEB-4251-80DE-B16155AC1B19} = {7BEB06B9-8E76-4CAE-8A65-B562B3907E02}
 		{769CF517-6232-45FF-8518-94E292A69245} = {6E158CF2-5A31-40DC-876D-2B00F3027017}
 		{85908A67-14E9-6B2C-84B6-5169E1D650E8} = {A671E38D-1C7E-4BE9-A940-41C3F6FC8C16}
+		{3C9531EA-936D-4884-8FCF-EAB74262C266} = {B09A448F-399B-430F-8918-881E1255A3D8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D75F05F-2182-46C8-B043-72ACD0DE4F5B}

@@ -1,14 +1,12 @@
-﻿using Xunit;
+﻿// File: RedisCacheProviderTests.cs
+using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
-using Microsoft.Extensions.Logging;
 using System;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using FluentAssertions;
-using System.Net;
+using Xunit;
 
 namespace FlexCore.Caching.Redis.Tests
 {
@@ -17,137 +15,145 @@ namespace FlexCore.Caching.Redis.Tests
     /// </summary>
     public class RedisCacheProviderTests : IDisposable
     {
-        private readonly Mock<IConnectionMultiplexer> _connectionMock;
-        private readonly Mock<IDatabase> _databaseMock;
+        private readonly Mock<IConnectionMultiplexer> _mockConnection;
+        private readonly Mock<ILogger<RedisCacheProvider>> _mockLogger;
         private readonly RedisCacheProvider _provider;
-        private bool _disposed;
+        private readonly Mock<IDatabase> _mockDatabase;
 
         /// <summary>
-        /// Opzioni di serializzazione condivise
-        /// </summary>
-        private static readonly JsonSerializerOptions _serializerOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        /// <summary>
-        /// Inizializza una nuova istanza della classe di test
+        /// Inizializza una nuova istanza dei test
         /// </summary>
         public RedisCacheProviderTests()
         {
-            _connectionMock = new Mock<IConnectionMultiplexer>();
-            _databaseMock = new Mock<IDatabase>();
-            var loggerMock = new Mock<ILogger<RedisCacheProvider>>();
+            _mockConnection = new Mock<IConnectionMultiplexer>();
+            _mockLogger = new Mock<ILogger<RedisCacheProvider>>();
+            _mockDatabase = new Mock<IDatabase>();
 
-            // Configurazione mock per Redis
-            _connectionMock.Setup(c => c.GetEndPoints(It.IsAny<bool>()))
-                         .Returns(new[] { new DnsEndPoint("localhost", 6379) });
-
-            _connectionMock.Setup(c => c.GetDatabase(
-                It.IsAny<int>(),
-                It.IsAny<object>()))
-                .Returns(_databaseMock.Object);
+            _mockConnection.Setup(c => c.GetDatabase(
+                    It.IsAny<int>(),
+                    It.IsAny<object>()))
+                .Returns(_mockDatabase.Object);
 
             _provider = new RedisCacheProvider(
                 "localhost:6379",
-                loggerMock.Object,
-                _connectionMock.Object,
-                _serializerOptions
-            );
+                _mockLogger.Object,
+                _mockConnection.Object);
         }
 
         /// <summary>
-        /// Verifica il corretto funzionamento di ExistsAsync
-        /// </summary>
-        [Fact]
-        public async Task ExistsAsync_KeyExists_ReturnsTrue()
-        {
-            // Arrange
-            _databaseMock.Setup(db => db.KeyExistsAsync("key", CommandFlags.None))
-                        .ReturnsAsync(true);
-
-            // Act
-            var result = await _provider.ExistsAsync("key");
-
-            // Assert
-            result.Should().BeTrue();
-        }
-
-        /// <summary>
-        /// Verifica la deserializzazione corretta di GetAsync
-        /// </summary>
-        [Fact]
-        public async Task GetAsync_ValidKey_ReturnsDeserializedObject()
-        {
-            // Arrange
-            var testObj = new { Id = 1, Name = "Test" };
-            var serialized = JsonSerializer.Serialize(testObj, _serializerOptions);
-
-            _databaseMock.Setup(db => db.StringGetAsync("key", CommandFlags.None))
-                        .ReturnsAsync(serialized);
-
-            // Act
-            var result = await _provider.GetAsync<TestClass>("key");
-
-            // Assert
-            result.Should().BeEquivalentTo(testObj);
-        }
-
-        /// <summary>
-        /// Verifica il comportamento di RemoveAsync
-        /// </summary>
-        [Fact]
-        public async Task RemoveAsync_ValidKey_DeletesKey()
-        {
-            // Arrange
-            _databaseMock.Setup(db => db.KeyDeleteAsync("key", CommandFlags.None))
-                        .ReturnsAsync(true);
-
-            // Act
-            var result = await _provider.RemoveAsync("key");
-
-            // Assert
-            result.Should().BeTrue();
-        }
-
-        /// <summary>
-        /// Verifica il corretto svuotamento della cache
-        /// </summary>
-        [Fact]
-        public async Task ClearAllAsync_FlushesAllDatabases()
-        {
-            // Arrange
-            var serverMock = new Mock<IServer>();
-            serverMock.Setup(s => s.FlushAllDatabasesAsync(CommandFlags.None))
-                     .Returns(Task.CompletedTask);
-
-            _connectionMock.Setup(c => c.GetServer(It.IsAny<EndPoint>(), It.IsAny<object>()))
-                          .Returns(serverMock.Object);
-
-            // Act
-            await _provider.ClearAllAsync();
-
-            // Assert
-            serverMock.Verify(s => s.FlushAllDatabasesAsync(CommandFlags.None), Times.Once);
-        }
-
-        /// <summary>
-        /// Rilascia le risorse del test
+        /// Verifica il corretto smaltimento delle risorse
         /// </summary>
         public void Dispose()
         {
-            if (_disposed) return;
             _provider.Dispose();
-            _disposed = true;
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Classe di test per la deserializzazione
+        /// Test per il comportamento di ClearAllAsync in caso di errore di connessione
         /// </summary>
-        private class TestClass
+        [Fact]
+        public async Task ClearAllAsync_ThrowsRedisConnectionException_WhenConnectionFails()
         {
-            public int Id { get; set; }
-            public string? Name { get; set; }
+            // Arrange
+            var mockServer = new Mock<IServer>();
+            _mockConnection.Setup(c => c.GetServer(
+                    It.IsAny<EndPoint>(),
+                    It.IsAny<CommandFlags>()))
+                .Returns(mockServer.Object);
+
+            var exception = new RedisConnectionException(
+                ConnectionFailureType.UnableToConnect,
+                "Errore di connessione");
+
+            mockServer.Setup(s => s.FlushAllDatabasesAsync(
+                    It.IsAny<CommandFlags>()))
+                .ThrowsAsync(exception);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<RedisConnectionException>(
+                () => _provider.ClearAllAsync());
+        }
+
+        /// <summary>
+        /// Test per GetAsync con deserializzazione fallita
+        /// </summary>
+        [Fact]
+        public async Task GetAsync_InvalidData_ShouldThrowJsonException()
+        {
+            // Arrange
+            const string key = "invalid_key";
+            _mockDatabase.Setup(db => db.StringGetAsync(
+                    key,
+                    It.IsAny<CommandFlags>()))
+                .ReturnsAsync(RedisValue.Unbox("{invalid_json}"));
+
+            // Act & Assert
+            await Assert.ThrowsAsync<JsonException>(
+                () => _provider.GetAsync<object>(key));
+        }
+
+        /// <summary>
+        /// Test per SetAsync con dati validi
+        /// </summary>
+        [Fact]
+        public async Task SetAsync_ValidData_ShouldReturnTrue()
+        {
+            // Arrange
+            const string key = "valid_key";
+            _mockDatabase.Setup(db => db.StringSetAsync(
+                    key,
+                    It.IsAny<RedisValue>(),
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<When>(),
+                    It.IsAny<CommandFlags>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _provider.SetAsync(key, "value", TimeSpan.FromMinutes(1));
+
+            // Assert
+            Assert.True(result);
+        }
+
+        /// <summary>
+        /// Test per RemoveAsync con chiave esistente
+        /// </summary>
+        [Fact]
+        public async Task RemoveAsync_ExistingKey_ShouldReturnTrue()
+        {
+            // Arrange
+            const string key = "existing_key";
+            _mockDatabase.Setup(db => db.KeyDeleteAsync(
+                    key,
+                    It.IsAny<CommandFlags>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _provider.RemoveAsync(key);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        /// <summary>
+        /// Test per ExistsAsync con chiave inesistente
+        /// </summary>
+        [Fact]
+        public async Task ExistsAsync_NonExistingKey_ShouldReturnFalse()
+        {
+            // Arrange
+            const string key = "non_existing_key";
+            _mockDatabase.Setup(db => db.KeyExistsAsync(
+                    key,
+                    It.IsAny<CommandFlags>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _provider.ExistsAsync(key);
+
+            // Assert
+            Assert.False(result);
         }
     }
 }

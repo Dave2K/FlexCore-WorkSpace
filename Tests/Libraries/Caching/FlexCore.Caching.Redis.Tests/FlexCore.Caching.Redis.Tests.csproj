@@ -34,6 +34,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="../../../../Projects/Libraries/Caching/FlexCore.Caching.Redis/FlexCore.Caching.Redis.csproj" />
+		<ProjectReference Include="..\..\..\..\Projects\Libraries\Caching\FlexCore.Caching.Factory\FlexCore.Caching.Factory.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
