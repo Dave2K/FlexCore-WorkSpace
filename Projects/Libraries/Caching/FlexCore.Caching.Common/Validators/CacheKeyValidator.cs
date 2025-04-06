@@ -3,32 +3,35 @@ using System.Text.RegularExpressions;
 
 namespace FlexCore.Caching.Common.Validators
 {
-    /// <summary>
-    /// Fornisce metodi per la validazione delle chiavi di cache
-    /// </summary>
-    public static partial class CacheKeyValidator
+    /// <summary>  
+    /// Fornisce metodi per la validazione delle chiavi di cache.  
+    /// </summary>  
+    public static partial class CacheKeyValidator // ✅ Aggiunto "partial"  
     {
-        /// <summary>
-        /// Regex precompilata per la validazione
-        /// </summary>
-        /// <remarks>
-        /// Formato consentito: lettere, numeri, trattini e underscore (1-128 caratteri)
-        /// </remarks>
-        [GeneratedRegex(@"^[a-zA-Z0-9_-]{1,128}$", RegexOptions.Compiled)]
-        private static partial Regex KeyRegex();
+        private static readonly Regex _keyRegex = new Regex(
+            pattern: @"^[a-zA-Z0-9_-]{1,128}$",
+            options: RegexOptions.Compiled
+        );
 
-        /// <summary>
-        /// Verifica la validità di una chiave
-        /// </summary>
-        /// <param name="key">Chiave da validare</param>
-        /// <returns>True se valida, altrimenti False</returns>
-        /// <exception cref="ArgumentNullException">Se key è null</exception>
-        public static bool ValidateKey(string key)
+        /// <summary>  
+        /// Verifica se una chiave rispetta il formato richiesto.  
+        /// </summary>  
+        public static void ValidateKey(string key)
         {
-            if (key is null)
-                throw new ArgumentNullException(nameof(key));
+            if (key == null)
+                throw new ArgumentNullException(nameof(key), "La chiave non può essere null.");
 
-            return KeyRegex().IsMatch(key);
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("La chiave non può essere vuota o contenere solo spazi.", nameof(key));
+
+            if (!_keyRegex.IsMatch(key))
+            {
+                throw new ArgumentException(
+                    $"Formato chiave non valido: {key}. " +
+                    "Caratteri consentiti: lettere, numeri, '-', '_'. Lunghezza: 1-128 caratteri.",
+                    nameof(key)
+                );
+            }
         }
     }
 }

@@ -4,41 +4,25 @@ using System;
 
 namespace FlexCore.Caching.Common.Tests
 {
-    /// <summary>
-    /// Test suite per la classe <see cref="CacheKeyValidator"/>
-    /// </summary>
     public class CacheKeyValidatorTests
     {
-        /// <summary>
-        /// Verifica il formato massimo consentito (128 caratteri)
-        /// </summary>
         [Fact]
-        public void ValidateKey_MaxLengthKey_ShouldReturnTrue()
+        public void ValidateKey_MaxLengthKey_ShouldNotThrow()
         {
             // Arrange
             var key = new string('a', 128);
 
-            // Act
-            bool result = CacheKeyValidator.ValidateKey(key);
-
-            // Assert
-            Assert.True(result);
+            // Act & Assert
+            CacheKeyValidator.ValidateKey(key);
         }
 
-        /// <summary>
-        /// Verifica caratteri speciali non consentiti
-        /// </summary>
         [Theory]
         [InlineData("key!")]
         [InlineData("key?test")]
         [InlineData("key with spaces")]
-        public void ValidateKey_InvalidCharacters_ShouldReturnFalse(string key)
+        public void ValidateKey_InvalidCharacters_ShouldThrow(string key)
         {
-            // Act
-            bool result = CacheKeyValidator.ValidateKey(key);
-
-            // Assert
-            Assert.False(result);
+            Assert.Throws<ArgumentException>(() => CacheKeyValidator.ValidateKey(key));
         }
     }
 }

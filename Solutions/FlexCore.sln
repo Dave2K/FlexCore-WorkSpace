@@ -86,6 +86,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{323C84A9-4776-4DB2-A89A-3D4A7E88079D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{6025D545-6A88-437E-A251-53E74A2A1904}"
+	ProjectSection(SolutionItems) = preProject
+		ICacheServiceAsyncConsistencyTests.cs = ICacheServiceAsyncConsistencyTests.cs
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ORM", "ORM", "{89504F29-1D94-4565-A145-EE3EF35EC397}"
 EndProject
@@ -161,6 +164,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Infrastructure.Events.Tests", "..\Tests\Libraries\Infrastructure\FlexCore.Infrastructure.Events.Tests\FlexCore.Infrastructure.Events.Tests.csproj", "{3C9531EA-936D-4884-8FCF-EAB74262C266}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_build", "_build", "{2089F577-176F-4063-96A0-65B351E2EF38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlexCore.Caching.Tests.Integration", "..\Tests\Libraries\Caching\FlexCore.Caching.Tests.Integration\FlexCore.Caching.Tests.Integration.csproj", "{2021188E-E102-4B63-9851-B924938DBE3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -384,6 +389,10 @@ Global
 		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C9531EA-936D-4884-8FCF-EAB74262C266}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2021188E-E102-4B63-9851-B924938DBE3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2021188E-E102-4B63-9851-B924938DBE3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2021188E-E102-4B63-9851-B924938DBE3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2021188E-E102-4B63-9851-B924938DBE3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -459,6 +468,7 @@ Global
 		{769CF517-6232-45FF-8518-94E292A69245} = {6E158CF2-5A31-40DC-876D-2B00F3027017}
 		{85908A67-14E9-6B2C-84B6-5169E1D650E8} = {A671E38D-1C7E-4BE9-A940-41C3F6FC8C16}
 		{3C9531EA-936D-4884-8FCF-EAB74262C266} = {B09A448F-399B-430F-8918-881E1255A3D8}
+		{2021188E-E102-4B63-9851-B924938DBE3C} = {7B07B7C3-9509-47BF-ACA9-E6BD82FD40E7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D75F05F-2182-46C8-B043-72ACD0DE4F5B}

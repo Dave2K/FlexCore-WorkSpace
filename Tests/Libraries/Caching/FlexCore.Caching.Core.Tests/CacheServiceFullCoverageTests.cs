@@ -1,52 +1,80 @@
 ﻿using Xunit;
 using FlexCore.Caching.Core.Interfaces;
-using FlexCore.Caching.Common.Exceptions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
+using System.Threading.Tasks;
 
 namespace FlexCore.Caching.Core.Tests
 {
-    /// <summary>
-    /// Test completi per verificare tutti gli scenari del servizio di cache
-    /// </summary>
     public class CacheServiceFullCoverageTests
     {
         [Theory]
-        [InlineData(null!)] // Test esplicito per null con null-forgiving operator
-        [InlineData("")]
-        [InlineData("invalid key!")]
-        public async Task GetAsync_InvalidKey_ShouldThrowArgumentException(string invalidKey)
+        [InlineData(null)]    // Test esplicito per null
+        [InlineData("")]      // Stringa vuota
+        [InlineData("   ")]   // Spazi bianchi
+        [InlineData("key!")]  // Carattere speciale
+        public async Task GetAsync_InvalidKey_ShouldThrowArgumentException(string? invalidKey)
         {
+            // Arrange
             var mockProvider = new Mock<ICacheProvider>();
             var mockLogger = new Mock<ILogger<ICacheService>>();
             var cacheService = new ConcreteCacheService(mockProvider.Object, mockLogger.Object);
 
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => cacheService.GetAsync<string>(invalidKey)
-            );
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                cacheService.GetAsync<string>(invalidKey!)); // ! solo per bypassare il warning nel test
         }
 
-        // Implementazione helper per il test
+        [Fact]
+        public async Task ClearAllAsync_ShouldCallProvider()
+        {
+            // Arrange
+            var mockProvider = new Mock<ICacheProvider>();
+            var mockLogger = new Mock<ILogger<ICacheService>>();
+            var cacheService = new ConcreteCacheService(mockProvider.Object, mockLogger.Object);
+
+            // Act
+            await cacheService.ClearAllAsync();
+
+            // Assert
+            mockProvider.Verify(p => p.ClearAllAsync(), Times.Once);
+        }
+
         private class ConcreteCacheService : ICacheService
         {
             private readonly ICacheProvider _provider;
-            private readonly ILogger<ICacheService> _logger;
 
             public ConcreteCacheService(ICacheProvider provider, ILogger<ICacheService> logger)
             {
-                _provider = provider;
-                _logger = logger;
+                _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             }
 
-            public T? Get<T>(string key) => throw new System.NotImplementedException();
-            public void Set<T>(string key, T value, TimeSpan expiration) => throw new System.NotImplementedException();
-            public bool Remove(string key) => throw new System.NotImplementedException();
-            public bool Exists(string key) => throw new System.NotImplementedException();
+            public Task<T?> GetAsync<T>(string key)
+            {
+                if (key is null) throw new ArgumentNullException(nameof(key));
+                return _provider.GetAsync<T>(key);
+            }
 
-            public Task<T?> GetAsync<T>(string key) => _provider.GetAsync<T>(key);
-            public Task SetAsync<T>(string key, T value, TimeSpan expiration) => _provider.SetAsync(key, value, expiration);
-            public Task<bool> RemoveAsync(string key) => _provider.RemoveAsync(key);
-            public Task<bool> ExistsAsync(string key) => _provider.ExistsAsync(key);
+            public async Task<bool> SetAsync<T>(string key, T value, TimeSpan expiration)
+            {
+                if (key is null) throw new ArgumentNullException(nameof(key));
+                return await _provider.SetAsync(key, value, expiration);
+            }
+
+            public async Task<bool> RemoveAsync(string key)
+            {
+                if (key is null) throw new ArgumentNullException(nameof(key));
+                return await _provider.RemoveAsync(key);
+            }
+
+            public async Task<bool> ExistsAsync(string key)
+            {
+                if (key is null) throw new ArgumentNullException(nameof(key));
+                return await _provider.ExistsAsync(key);
+            }
+
+            public async Task ClearAllAsync() => await _provider.ClearAllAsync();
         }
     }
 }

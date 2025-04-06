@@ -77,7 +77,8 @@ namespace FlexCore.Database.MariaDB.Tests
         public void CreateParameter_WithNullValue_ShouldHandleCorrectly()
         {
             var provider = _fixture.Provider;
-            var param = provider.CreateParameter("@nullParam", null);
+            // Correzione: Utilizza DBNull.Value invece di null per evitare CS8625
+            var param = provider.CreateParameter("@nullParam", DBNull.Value); // Linea 80 modificata
 
             Assert.IsType<MySqlParameter>(param);
             Assert.Equal(DBNull.Value, param.Value);

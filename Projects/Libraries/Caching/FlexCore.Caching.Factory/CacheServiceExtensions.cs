@@ -48,15 +48,4 @@ namespace FlexCore.Caching.Factory
             services.Configure(configureOptions);
         }
     }
-
-    /// <summary>
-    /// Opzioni di configurazione per il cache factory
-    /// </summary>
-    /// <param name="ValidateProvidersOnStartup">
-    /// Abilita la validazione di tutti i provider registrati allo startup
-    /// </param>
-    public class CacheFactoryOptions
-    {
-        public bool ValidateProvidersOnStartup { get; set; } = true;
-    }
 }

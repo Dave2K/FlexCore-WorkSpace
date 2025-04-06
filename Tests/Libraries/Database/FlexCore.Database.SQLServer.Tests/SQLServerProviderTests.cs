@@ -2,106 +2,92 @@
 using Microsoft.Data.SqlClient;
 using System;
 using System.Data;
+using System.Transactions;
+using Xunit;
 
 namespace FlexCore.Database.SQLServer.Tests
 {
     /// <summary>
-    /// Fixture per la gestione centralizzata del database di test SQL Server
+    /// Test completi per <see cref="SQLServerDatabaseProvider"/> con gestione transazionale.
     /// </summary>
-    public class SQLServerTestFixture : IDisposable
+    public class SQLServerProviderTests : IClassFixture<SQLServerTestFixture>
     {
-        private const string TestDatabaseName = "FlexCoreTestDB";
-        private readonly string _masterConnectionString = @"Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;Encrypt=False;";
+        private readonly SQLServerTestFixture _fixture;
+        private const string TestTable = "TestTable_789";
 
-        /// <summary>
-        /// Ottiene il provider di database configurato
-        /// </summary>
-        public SQLServerDatabaseProvider Provider { get; }
-
-        /// <summary>
-        /// Ottiene la stringa di connessione per il database di test
-        /// </summary>
-        public string TestConnectionString { get; }
-
-        /// <summary>
-        /// Inizializza una nuova istanza della fixture
-        /// </summary>
-        public SQLServerTestFixture()
+        public SQLServerProviderTests(SQLServerTestFixture fixture)
         {
-            Provider = new SQLServerDatabaseProvider();
-            TestConnectionString = $@"Server=.\SQLEXPRESS;Database={TestDatabaseName};Trusted_Connection=True;Encrypt=False;";
-
-            CreateTestDatabase();
-            Provider.Connect(TestConnectionString);
+            _fixture = fixture;
+            _fixture.Initialize(TestTable);
         }
 
         /// <summary>
-        /// Inizializza lo stato del database per un test specifico
+        /// Verifica la creazione di parametri con valori nulli.
         /// </summary>
+        [Fact]
+        public void CreateParameter_WithNullValue_ShouldHandleCorrectly()
+        {
+            var provider = _fixture.Provider;
+            var param = provider.CreateParameter("@nullParam", DBNull.Value);
+
+            Assert.IsType<SqlParameter>(param);
+            Assert.Equal(DBNull.Value, param.Value);
+        }
+
+        /// <summary>
+        /// Verifica il corretto funzionamento delle transazioni distribuite.
+        /// </summary>
+        [Fact]
+        public void DistributedTransaction_ShouldRollbackAcrossOperations()
+        {
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                var provider = _fixture.Provider;
+                provider.ExecuteNonQuery($"INSERT INTO {TestTable} (Id) VALUES (999);");
+                // Non chiamare Complete() per rollback
+            }
+
+            using var reader = _fixture.Provider.ExecuteQuery($"SELECT Id FROM {TestTable} WHERE Id = 999;");
+            Assert.False(reader.Read());
+        }
+    }
+
+    /// <summary>
+    /// Fixture per la gestione del database SQL Server.
+    /// </summary>
+    public class SQLServerTestFixture : IDisposable
+    {
+        public SQLServerDatabaseProvider Provider { get; }
+        private const string TestDatabaseName = "FlexCoreTestDB";
+        private string _currentTestTable;
+
+        public SQLServerTestFixture()
+        {
+            Provider = new SQLServerDatabaseProvider();
+            Provider.Connect($"Server=.\\SQLEXPRESS;Database={TestDatabaseName};Trusted_Connection=True;Encrypt=False;");
+        }
+
         public void Initialize(string testTable)
         {
+            _currentTestTable = testTable;
             Provider.ExecuteNonQuery(
-                $@"IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '{testTable}')
+                $@"IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '{_currentTestTable}')
                 BEGIN
-                    CREATE TABLE {testTable} (
-                        Id INT PRIMARY KEY,
-                        Data NVARCHAR(50)
-                    )
+                    CREATE TABLE {_currentTestTable} (Id INT PRIMARY KEY, Data NVARCHAR(50))
                 END"
             );
         }
 
-        /// <summary>
-        /// Esegue la pulizia delle risorse
-        /// </summary>
         public void Dispose()
         {
-            CleanupTestTables();
-            Provider.Disconnect();
-            DropTestDatabase();
-            GC.SuppressFinalize(this);
-        }
-
-        private void CreateTestDatabase()
-        {
-            using (var connection = new SqlConnection(_masterConnectionString))
-            {
-                connection.Open();
-                new SqlCommand(
-                    $@"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '{TestDatabaseName}')
-                    BEGIN
-                        CREATE DATABASE {TestDatabaseName}
-                    END",
-                    connection
-                ).ExecuteNonQuery();
-            }
-        }
-
-        private void DropTestDatabase()
-        {
-            using (var connection = new SqlConnection(_masterConnectionString))
-            {
-                connection.Open();
-                new SqlCommand(
-                    $@"IF EXISTS (SELECT * FROM sys.databases WHERE name = '{TestDatabaseName}')
-                    BEGIN
-                        ALTER DATABASE {TestDatabaseName} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                        DROP DATABASE {TestDatabaseName}
-                    END",
-                    connection
-                ).ExecuteNonQuery();
-            }
-        }
-
-        private void CleanupTestTables()
-        {
             Provider.ExecuteNonQuery(
-                @"DECLARE @sql NVARCHAR(MAX) = '';
-                SELECT @sql += 'DROP TABLE ' + QUOTENAME(name) + ';' 
-                FROM sys.tables 
-                WHERE name LIKE 'TestTable_%';
-                EXEC sp_executesql @sql;"
+                $@"IF EXISTS (SELECT * FROM sys.tables WHERE name = '{_currentTestTable}')
+                BEGIN
+                    DROP TABLE {_currentTestTable}
+                END"
             );
+            Provider.Disconnect();
+            GC.SuppressFinalize(this);
         }
     }
 }
