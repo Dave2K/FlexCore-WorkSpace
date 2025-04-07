@@ -1,16 +1,20 @@
 ﻿using FlexCore.Caching.Core.Interfaces;
 using FlexCore.Caching.Memory;
 using FlexCore.Caching.Redis;
-using Moq;
-using System.Threading.Tasks;
+using System;
+using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace FlexCore.Caching.Core.Tests
 {
     /// <summary>
-    /// Verifica la conformità async pura dell'interfaccia <see cref="ICacheService"/>
-    /// e l'assenza di metodi sincroni
+    /// Verifica la conformità asincrona delle implementazioni ICacheService
     /// </summary>
+    /// <remarks>
+    /// Garantisce che tutte le implementazioni rispettino il pattern async puro
+    /// e non introducano metodi sincroni non necessari
+    /// </remarks>
     public class ICacheServiceAsyncConsistencyTests
     {
         /// <summary>
@@ -20,13 +24,11 @@ namespace FlexCore.Caching.Core.Tests
         public void Interface_ShouldContainOnlyAsyncMethods()
         {
             // Arrange
-            var methodNames = typeof(ICacheService).GetMethods()
-                .Select(m => m.Name)
-                .ToList();
+            var methods = typeof(ICacheService).GetMethods();
 
             // Act
-            var syncMethods = methodNames
-                .Where(name => !name.EndsWith("Async"))
+            var syncMethods = methods
+                .Where(m => !m.Name.EndsWith("Async"))
                 .ToList();
 
             // Assert
@@ -34,8 +36,9 @@ namespace FlexCore.Caching.Core.Tests
         }
 
         /// <summary>
-        /// Verifica che tutte le implementazioni rispettino il pattern async
+        /// Verifica che le implementazioni non sovrascrivano metodi non async
         /// </summary>
+        /// <param name="providerType">Tipo del provider da testare</param>
         [Theory]
         [InlineData(typeof(MemoryCacheProvider))]
         [InlineData(typeof(RedisCacheProvider))]
@@ -47,12 +50,20 @@ namespace FlexCore.Caching.Core.Tests
                 .Select(m => m.Name)
                 .ToList();
 
-            var providerMethods = providerType.GetMethods()
-                .Where(m => m.DeclaringType == providerType)
+            // Act
+            var providerMethods = providerType.GetMethods(
+                    BindingFlags.Public |
+                    BindingFlags.Instance |
+                    BindingFlags.DeclaredOnly
+                )
+                .Where(m =>
+                    !m.IsSpecialName &&
+                    m.DeclaringType == providerType &&
+                    m.GetBaseDefinition().DeclaringType == typeof(ICacheService)
+                )
                 .Select(m => m.Name)
                 .ToList();
 
-            // Act
             var invalidMethods = providerMethods
                 .Where(name => !asyncMethods.Contains(name))
                 .ToList();
@@ -64,20 +75,27 @@ namespace FlexCore.Caching.Core.Tests
         /// <summary>
         /// Verifica che i metodi async ritornino Task
         /// </summary>
+        /// <param name="providerType">Tipo del provider da testare</param>
         [Theory]
         [InlineData(typeof(MemoryCacheProvider))]
         [InlineData(typeof(RedisCacheProvider))]
         public void AsyncMethods_ShouldReturnTask(Type providerType)
         {
-            // Arrange/Act
+            // Arrange
             var methods = providerType.GetMethods()
-                .Where(m => m.Name.EndsWith("Async")
-                    && m.ReturnType != typeof(Task)
-                    && !m.ReturnType.IsSubclassOf(typeof(Task)))
+                .Where(m => m.Name.EndsWith("Async"))
+                .ToList();
+
+            // Act
+            var invalidMethods = methods
+                .Where(m =>
+                    m.ReturnType != typeof(Task) &&
+                    !m.ReturnType.IsSubclassOf(typeof(Task))
+                )
                 .ToList();
 
             // Assert
-            Assert.Empty(methods);
+            Assert.Empty(invalidMethods);
         }
     }
 }

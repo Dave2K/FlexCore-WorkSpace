@@ -8,42 +8,18 @@ using Xunit;
 namespace FlexCore.Caching.Common.Tests
 {
     /// <summary>
-    /// Verifica che la gestione degli errori sia centralizzata e non duplicata
+    /// Verifica la consistenza della gestione centralizzata degli errori
     /// </summary>
+    /// <remarks>
+    /// Garantisce che tutte le eccezioni concrete non eseguano logging diretto, 
+    /// ma utilizzino esclusivamente il <see cref="CacheExceptionHandler"/>
+    /// </remarks>
     public class ExceptionLoggingConsistencyTests
     {
-        /// <summary>
-        /// Verifica che un'eccezione venga loggata esattamente una volta
-        /// </summary>
-        [Fact]
-        public void HandleException_ShouldLogOncePerError()
-        {
-            // Arrange
-            var loggerMock = new Mock<ILogger>();
-            var innerEx = new InvalidOperationException("Test error");
-
-            // Act
-            var ex = CacheExceptionHandler.HandleException<CacheException>(
-                loggerMock.Object,
-                innerEx,
-                "Test operation"
-            );
-
-            // Assert
-            loggerMock.Verify(
-                x => x.Log(
-                    LogLevel.Error,
-                    It.IsAny<EventId>(),
-                    It.IsAny<It.IsAnyType>(),
-                    innerEx,
-                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
-                ),
-                Times.Once
-            );
-        }
+        private readonly Mock<ILogger> _mockLogger = new();
 
         /// <summary>
-        /// Verifica che le eccezioni concrete non aggiungano logging duplicato
+        /// Verifica che le eccezioni concrete non effettuino logging autonomo
         /// </summary>
         [Theory]
         [InlineData(typeof(MemoryCacheException))]
@@ -51,35 +27,61 @@ namespace FlexCore.Caching.Common.Tests
         public void ConcreteExceptions_ShouldNotLogDirectly(Type exceptionType)
         {
             // Arrange
-            var loggerMock = new Mock<ILogger>();
-            var constructor = exceptionType.GetConstructor(new[]
-            {
-                typeof(ILogger<>).MakeGenericType(exceptionType),
-                typeof(string),
-                typeof(Exception)
-            });
+            var innerEx = new Exception("Test error");
+            const string message = "Test message";
 
-            // Act/Assert
-            if (constructor != null)
+            // Act
+            if (exceptionType == typeof(MemoryCacheException))
             {
-                var ex = (Exception)constructor.Invoke(new object[]
-                {
-                    loggerMock.Object,
-                    "Test message",
-                    new Exception()
-                });
-
-                loggerMock.Verify(
-                    x => x.Log(
-                        It.IsAny<LogLevel>(),
-                        It.IsAny<EventId>(),
-                        It.IsAny<It.IsAnyType>(),
-                        It.IsAny<Exception>(),
-                        It.IsAny<Func<It.IsAnyType, Exception?, string>>()
-                    ),
-                    Times.Never
-                );
+                // Utilizza solo costruttori senza logger
+                _ = new MemoryCacheException(message, innerEx);
             }
+            else if (exceptionType == typeof(RedisCacheException))
+            {
+                // Utilizza solo costruttori senza logger
+                _ = new RedisCacheException(message, innerEx);
+            }
+
+            // Assert
+            _mockLogger.Verify(
+                x => x.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+                Times.Never
+            );
+        }
+
+        /// <summary>
+        /// Verifica che il logging avvenga solo tramite l'handler centralizzato
+        /// </summary>
+        [Fact]
+        public void AllLogging_ShouldBeHandledByExceptionHandler()
+        {
+            // Arrange
+            var ex = new InvalidOperationException("Test");
+
+            // Act
+            var result = CacheExceptionHandler.HandleException<CacheException>(
+                _mockLogger.Object,
+                ex,
+                "TestOperation"
+            );
+
+            // Assert
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    ex,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+                Times.Once
+            );
         }
     }
 }

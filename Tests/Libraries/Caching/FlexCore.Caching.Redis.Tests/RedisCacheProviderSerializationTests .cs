@@ -1,4 +1,4 @@
-﻿// File: RedisCacheProviderSerializationTests.cs
+﻿using FlexCore.Caching.Redis;
 using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
@@ -10,24 +10,23 @@ using Xunit;
 namespace FlexCore.Caching.Redis.Tests
 {
     /// <summary>
-    /// Test per la gestione degli errori di serializzazione/deserializzazione
+    /// Test suite per la gestione degli errori di serializzazione
     /// </summary>
     public class RedisCacheProviderSerializationTests : IDisposable
     {
         private readonly Mock<IConnectionMultiplexer> _mockConnection;
-        private readonly RedisCacheProvider _provider;
+        private readonly Mock<IDatabase> _mockDatabase;
         private readonly Mock<ILogger<RedisCacheProvider>> _mockLogger;
-        private readonly IDatabase _mockDatabase;
+        private readonly RedisCacheProvider _provider;
 
         public RedisCacheProviderSerializationTests()
         {
             _mockConnection = new Mock<IConnectionMultiplexer>();
             _mockLogger = new Mock<ILogger<RedisCacheProvider>>();
+            _mockDatabase = new Mock<IDatabase>();
 
-            // Configurazione mock del database
-            _mockDatabase = new Mock<IDatabase>().Object;
             _mockConnection.Setup(c => c.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
-                .Returns(_mockDatabase);
+                          .Returns(_mockDatabase.Object);
 
             _provider = new RedisCacheProvider(
                 "localhost:6379",
@@ -37,30 +36,39 @@ namespace FlexCore.Caching.Redis.Tests
         }
 
         /// <summary>
-        /// Verifica il comportamento con dati JSON non validi
+        /// Verifica che JSON malformato generi log corretti e ritorni default
         /// </summary>
         [Fact]
         public async Task GetAsync_InvalidJson_ShouldLogAndReturnDefault()
         {
             // Arrange
-            const string corruptedKey = "corrupted_key";
-            var mockDb = new Mock<IDatabase>();
-            mockDb.Setup(db => db.StringGetAsync(corruptedKey, CommandFlags.None))
-                .ReturnsAsync(RedisValue.Unbox("invalid_json"));
+            const string key = "invalid_key";
+            const string invalidJson = "{invalid_property: 123}"; // JSON non quotato
+            _mockDatabase.Setup(db => db.StringGetAsync(key, CommandFlags.None))
+                        .ReturnsAsync(invalidJson);
 
-            _mockConnection.Setup(c => c.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
-                .Returns(mockDb.Object);
+            // Act
+            var result = await _provider.GetAsync<object>(key);
 
-            // Act & Assert
-            await Assert.ThrowsAsync<JsonException>(() => _provider.GetAsync<object>(corruptedKey));
+            // Assert
+            Assert.Null(result);
 
-            _mockLogger.Verify(log => log.LogError(
-                It.IsAny<JsonException>(),
-                It.Is<string>(msg => msg.Contains("Errore durante la deserializzazione")),
-                corruptedKey
-            ), Times.Once);
+            // ✅ Verifica esplicita del messaggio e del livello di log
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, _) =>
+                        v.ToString().Contains("Deserializzazione fallita") &&
+                        v.ToString().Contains(key)
+                    ),
+                    It.IsAny<JsonException>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+                Times.Once
+            );
         }
 
-        public void Dispose() => _mockConnection.Reset();
+        public void Dispose() => _provider.Dispose();
     }
 }

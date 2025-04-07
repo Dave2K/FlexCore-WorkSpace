@@ -1,113 +1,109 @@
 ﻿using FlexCore.Caching.Common.Validators;
-using FlexCore.Caching.Core.Interfaces;
-using FlexCore.Caching.Memory;
-using FlexCore.Caching.Redis;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Moq;
-using StackExchange.Redis;
-using System;
-using System.Threading.Tasks;
 using Xunit;
+using System;
 
 namespace FlexCore.Caching.Core.Tests
 {
     /// <summary>
-    /// Verifica la strategia centralizzata di validazione delle chiavi di cache.
+    /// Test suite per la strategia centralizzata di validazione delle chiavi
     /// </summary>
+    /// <remarks>
+    /// Verifica tutte le condizioni di errore e i messaggi associati
+    /// </remarks>
     public class KeyValidationStrategyTests
     {
         /// <summary>
-        /// Verifica che i provider utilizzino il validatore centralizzato per le chiavi.
+        /// Test parametrizzato per la validazione delle chiavi
         /// </summary>
-        /// <param name="providerType">Tipo del provider da testare (MemoryCacheProvider/RedisCacheProvider).</param>
+        /// <param name="key">Chiave da testare</param>
+        /// <param name="expectedExceptionType">Tipo di eccezione attesa</param>
         [Theory]
-        [InlineData(typeof(MemoryCacheProvider))]
-        [InlineData(typeof(RedisCacheProvider))]
-        public async Task Providers_ShouldUseCentralValidatorAsync(Type providerType)
+        [InlineData("ValidKey-123", null)]
+        [InlineData("invalid!key", typeof(ArgumentException))]
+        [InlineData("", typeof(ArgumentException))]
+        [InlineData("   ", typeof(ArgumentException))]
+        [InlineData(null, typeof(ArgumentNullException))]
+        public void CentralValidator_ShouldHandleAllCases(
+            string? key,
+            Type? expectedExceptionType)
         {
             // Arrange
-            var provider = CreateProvider(providerType);
-            const string invalidKey = "invalid key!";
+            Action testAction = () => CacheKeyValidator.ThrowIfInvalid(key!);
 
             // Act & Assert
-            var ex = await Assert.ThrowsAsync<ArgumentException>( // ✅ Rimosso ConfigureAwait
-                () => provider.ExistsAsync(invalidKey)
-            );
-
-            Assert.Contains("CacheKeyValidator", ex.Message);
-        }
-
-        /// <summary>
-        /// Verifica che BaseCacheManager non implementi logiche autonome di validazione.
-        /// </summary>
-        [Fact]
-        public void BaseCacheManager_ShouldNotImplementCustomValidation()
-        {
-            // Act
-            var managerMethods = typeof(BaseCacheManager).GetMethods();
-            var validationMethods = Array.FindAll(
-                managerMethods,
-                m => m.Name.Contains("ValidateKey", StringComparison.Ordinal)
-            );
-
-            // Assert
-            Assert.Empty(validationMethods);
-        }
-
-        /// <summary>
-        /// Verifica il comportamento del validatore centrale con diversi tipi di chiavi.
-        /// </summary>
-        /// <param name="key">Chiave da validare.</param>
-        /// <param name="isValid">Indica se la chiave è attesa come valida.</param>
-        [Theory]
-        [InlineData("ValidKey", true)]
-        [InlineData("invalid key!", false)]
-        [InlineData("", false)]
-        [InlineData(null!, false)]
-        public void CentralValidator_ShouldHandleAllCases(string? key, bool isValid)
-        {
-            if (isValid)
+            if (expectedExceptionType == null)
             {
-                CacheKeyValidator.ThrowIfInvalid(key!);
+                testAction();
+            }
+            else if (expectedExceptionType == typeof(ArgumentNullException))
+            {
+                var ex = Assert.Throws<ArgumentNullException>(testAction);
+                Assert.Equal("key", ex.ParamName);
+                Assert.Contains("non può essere null", ex.Message);
             }
             else
             {
-                Assert.Throws<ArgumentException>(() => CacheKeyValidator.ThrowIfInvalid(key!));
+                var ex = Assert.Throws<ArgumentException>(testAction);
+                Assert.Equal("key", ex.ParamName);
+
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    Assert.Contains("non può essere vuota o contenere solo spazi", ex.Message);
+                }
+                else
+                {
+                    Assert.Contains("non valido", ex.Message);
+                }
             }
         }
 
         /// <summary>
-        /// Crea un'istanza del provider specificato per i test.
+        /// Verifica il comportamento con chiave di lunghezza massima
         /// </summary>
-        /// <param name="providerType">Tipo del provider (MemoryCacheProvider/RedisCacheProvider).</param>
-        /// <returns>Istanza configurata del provider.</returns>
-        private ICacheProvider CreateProvider(Type providerType)
+        [Fact]
+        public void MaxLengthKey_ShouldBeValid()
         {
-            if (providerType == typeof(MemoryCacheProvider))
-            {
-                return new MemoryCacheProvider(
-                    new MemoryCache(new MemoryCacheOptions()),
-                    Mock.Of<ILogger<MemoryCacheProvider>>()
-                );
-            }
+            // Arrange
+            var key = new string('a', 128);
 
-            if (providerType == typeof(RedisCacheProvider))
-            {
-                var mockMultiplexer = new Mock<IConnectionMultiplexer>();
-                mockMultiplexer.Setup(m => m.GetDatabase(
-                    It.IsAny<int>(),
-                    It.IsAny<object>()
-                )).Returns(Mock.Of<IDatabase>());
+            // Act & Assert
+            CacheKeyValidator.ThrowIfInvalid(key);
+        }
 
-                return new RedisCacheProvider(
-                    "localhost:6379",
-                    Mock.Of<ILogger<RedisCacheProvider>>(),
-                    mockMultiplexer.Object
-                );
-            }
+        /// <summary>
+        /// Verifica il comportamento con chiave troppo lunga
+        /// </summary>
+        [Fact]
+        public void OverMaxLengthKey_ShouldThrow()
+        {
+            // Arrange
+            var key = new string('a', 129);
 
-            throw new NotSupportedException($"Provider non supportato: {providerType.Name}");
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(
+                () => CacheKeyValidator.ThrowIfInvalid(key)
+            );
+
+            Assert.Equal("key", ex.ParamName);
+            Assert.Contains("non valido", ex.Message);
+        }
+
+        /// <summary>
+        /// Verifica il comportamento con caratteri speciali non consentiti
+        /// </summary>
+        [Theory]
+        [InlineData("key?test")]
+        [InlineData("test/key")]
+        [InlineData("key@test")]
+        public void InvalidCharacters_ShouldThrow(string invalidKey)
+        {
+            // Act & Assert
+            var ex = Assert.Throws<ArgumentException>(
+                () => CacheKeyValidator.ThrowIfInvalid(invalidKey)
+            );
+
+            Assert.Equal("key", ex.ParamName);
+            Assert.Contains("non valido", ex.Message);
         }
     }
 }

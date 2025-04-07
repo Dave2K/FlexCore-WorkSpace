@@ -1,22 +1,18 @@
 ﻿using FlexCore.Caching.Common.Exceptions;
+using FlexCore.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 using System;
+using Xunit;
 
 namespace FlexCore.Caching.Memory.Tests
 {
-    /// <summary>
-    /// Test per la classe <see cref="MemoryCacheException"/>
-    /// </summary>
     public class MemoryCacheExceptionTests
     {
         /// <summary>
-        /// Verifica che venga lanciata una <see cref="ArgumentException"/> per messaggi non validi
+        /// Verifica che venga lanciata ArgumentException per messaggi non validi.
         /// </summary>
-        /// <param name="invalidMessage">Messaggio non valido da testare</param>
         [Theory]
-        // Sostituito null con casi di test validi per stringhe non nullable
         [InlineData("")]         // Stringa vuota
         [InlineData("   ")]      // Spazi bianchi
         public void Constructor_InvalidMessage_ShouldThrow(string invalidMessage)
@@ -27,7 +23,8 @@ namespace FlexCore.Caching.Memory.Tests
 
             // Act & Assert
             var ex = Assert.Throws<ArgumentException>(() =>
-                new MemoryCacheException(loggerMock.Object, invalidMessage, innerEx));
+                new MemoryCacheException(loggerMock.Object, invalidMessage, innerEx)
+            );
 
             Assert.Equal("message", ex.ParamName);
         }

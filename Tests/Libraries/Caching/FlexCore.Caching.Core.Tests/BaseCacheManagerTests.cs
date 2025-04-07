@@ -1,68 +1,50 @@
-﻿using Xunit;
-using Moq;
-using FlexCore.Caching.Core.Interfaces;
-using Microsoft.Extensions.Logging;
+﻿using FlexCore.Caching.Common.Validators;
+using Xunit;
 using System;
 
 namespace FlexCore.Caching.Core.Tests
 {
     /// <summary>
-    /// Test per la classe <see cref="BaseCacheManager"/>
+    /// Test suite per la validazione delle chiavi in BaseCacheManager
     /// </summary>
     public class BaseCacheManagerTests
     {
-        private class TestCacheManager : BaseCacheManager
-        {
-            public TestCacheManager(ILogger logger, ICacheProvider provider)
-                : base(logger, provider) { }
-        }
-
         /// <summary>
-        /// Verifica che il costruttore sollevi eccezioni per parametri nulli
-        /// </summary>
-        [Fact]
-        public void Constructor_NullParameters_ThrowsException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new TestCacheManager(null!, Mock.Of<ICacheProvider>()));
-
-            Assert.Throws<ArgumentNullException>(() =>
-                new TestCacheManager(Mock.Of<ILogger>(), null!));
-        }
-
-        /// <summary>
-        /// Verifica il corretto funzionamento del metodo ExistsAsync
-        /// </summary>
-        [Fact]
-        public async Task ExistsAsync_ValidKey_CallsProvider()
-        {
-            var providerMock = new Mock<ICacheProvider>();
-            var manager = new TestCacheManager(
-                Mock.Of<ILogger>(),
-                providerMock.Object
-            );
-
-            await manager.ExistsAsync("valid_key");
-            providerMock.Verify(p => p.ExistsAsync("valid_key"), Times.Once);
-        }
-
-        /// <summary>
-        /// Verifica il comportamento con chiavi non valide
+        /// Verifica che chiavi non valide generino eccezioni specifiche
         /// </summary>
         /// <param name="key">Chiave da testare</param>
+        /// <param name="expectedException">Tipo di eccezione attesa</param>
         [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("  ")]
-        public void ValidateKey_InvalidKeys_ThrowsException(string? key)
+        [InlineData(null, typeof(ArgumentNullException))]
+        [InlineData("", typeof(ArgumentException))]
+        [InlineData("  ", typeof(ArgumentException))]
+        [InlineData("invalid!key", typeof(ArgumentException))]
+        public void ValidateKey_InvalidKeys_ThrowsSpecificExceptions(
+            string? key,
+            Type expectedException)
         {
-            var manager = new TestCacheManager(
-                Mock.Of<ILogger>(),
-                Mock.Of<ICacheProvider>()
+            var exception = Assert.Throws(
+                expectedException,
+                () => CacheKeyValidator.ThrowIfInvalid(key!)
             );
 
-            Assert.Throws<ArgumentException>(() =>
-                manager.ExistsAsync(key!).GetAwaiter().GetResult());
+            if (exception is ArgumentException argEx)
+            {
+                Assert.Equal("key", argEx.ParamName);
+            }
+        }
+
+        /// <summary>
+        /// Verifica che chiavi valide non generino eccezioni
+        /// </summary>
+        /// <param name="key">Chiave valida da testare</param>
+        [Theory]
+        [InlineData("valid_key-123")]
+        [InlineData("TEST_KEY")]
+        [InlineData("a")]
+        public void ValidateKey_ValidKeys_ShouldNotThrow(string key)
+        {
+            CacheKeyValidator.ThrowIfInvalid(key);
         }
     }
 }

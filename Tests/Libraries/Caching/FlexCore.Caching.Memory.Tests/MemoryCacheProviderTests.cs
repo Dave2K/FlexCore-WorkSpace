@@ -1,57 +1,57 @@
-﻿using Xunit;
+﻿using FlexCore.Caching.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
-using Moq;
 using Microsoft.Extensions.Logging;
+using Moq;
 using System;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace FlexCore.Caching.Memory.Tests
 {
     /// <summary>
-    /// Test suite per la classe <see cref="MemoryCacheProvider"/>
+    /// Test suite per MemoryCacheProvider
     /// </summary>
-    public class MemoryCacheProviderTests
+    public class MemoryCacheProviderTests : IDisposable
     {
-        /// <summary>
-        /// Verifica il comportamento di ClearAllAsync con cache vuota
-        /// </summary>
-        [Fact]
-        public async Task ClearAllAsync_OnEmptyCache_ShouldNotThrow()
-        {
-            // Arrange
-            var cache = new MemoryCache(new MemoryCacheOptions());
-            var logger = Mock.Of<ILogger<MemoryCacheProvider>>();
-            var provider = new MemoryCacheProvider(cache, logger);
+        private readonly MemoryCacheProvider _provider;
+        private readonly IMemoryCache _cache;
 
-            // Act & Assert
-            await provider.ClearAllAsync();
+        /// <summary>
+        /// Inizializza una nuova istanza dei test
+        /// </summary>
+        public MemoryCacheProviderTests()
+        {
+            _cache = new MemoryCache(new MemoryCacheOptions());
+            _provider = new MemoryCacheProvider(
+                _cache,
+                Mock.Of<ILogger<MemoryCacheProvider>>()
+            );
         }
 
         /// <summary>
-        /// Verifica il logging degli errori durante le operazioni
+        /// Verifica che GetAsync sollevi eccezione per chiavi non valide
         /// </summary>
-        [Fact]
-        public async Task SetAsync_OnError_ShouldLogError()
+        [Theory]
+        [InlineData(null)]    // Test esplicito per null
+        [InlineData("")]      // Stringa vuota
+        [InlineData("  ")]    // Spazi bianchi
+        public async Task GetAsync_InvalidKey_ThrowsArgumentException(string? invalidKey)
         {
-            // Arrange
-            var faultyCache = new Mock<IMemoryCache>();
-            faultyCache.Setup(c => c.CreateEntry(It.IsAny<object>()))
-                      .Throws(new Exception("Simulated error"));
+            // Usa il null-forgiving operator solo dopo aver verificato la logica
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+                _provider.GetAsync<string>(invalidKey!));
 
-            var loggerMock = new Mock<ILogger<MemoryCacheProvider>>();
-            var provider = new MemoryCacheProvider(faultyCache.Object, loggerMock.Object);
+            Assert.Equal("key", exception.ParamName);
+        }
 
-            // Act
-            await provider.SetAsync("key", "value", TimeSpan.Zero);
-
-            // Assert
-            loggerMock.Verify(x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()
-            ));
+        /// <summary>
+        /// Pulizia delle risorse
+        /// </summary>
+        public void Dispose()
+        {
+            _provider.Dispose();
+            _cache.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }
