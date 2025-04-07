@@ -7,67 +7,126 @@ using Xunit;
 namespace FlexCore.Caching.Redis.Tests
 {
     /// <summary>
-    /// Test per garantire la copertura completa della classe RedisCacheException
+    /// Test suite per la classe <see cref="RedisCacheException"/>
     /// </summary>
     public class RedisCacheExceptionFullCoverageTests
     {
         /// <summary>
-        /// Verifica il costruttore con tutti i parametri
+        /// Verifica che il costruttore completo registri l'errore correttamente
         /// </summary>
         [Fact]
         public void FullConstructor_ShouldSetPropertiesAndLogError()
         {
             // Arrange
-            var loggerMock = new Mock<ILogger<RedisCacheException>>();
-            var innerEx = new Exception("Database connection failed");
-            const string message = "Critical Redis error";
+            var loggerMock = new Mock<ILogger<RedisCacheProvider>>();
+            Exception realException;
+            try
+            {
+                throw new Exception("Errore interno simulato");
+            }
+            catch (Exception ex)
+            {
+                realException = ex; // Genera stack trace reale
+            }
+            const string message = "Errore Redis critico";
 
             // Act
-            var ex = new RedisCacheException(loggerMock.Object, message, innerEx);
+            var redisEx = new RedisCacheException(loggerMock.Object, message, realException); // Rinominata variabile
 
             // Assert
-            Assert.Equal(message, ex.Message);
-            Assert.Same(innerEx, ex.InnerException);
+            Assert.Equal(message, redisEx.Message);
+            Assert.Same(realException, redisEx.InnerException);
+
+            // Verifica pattern esatto del log
             loggerMock.Verify(x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(message)),
-                innerEx,
+                It.Is<It.IsAnyType>((v, _) =>
+                    v.ToString()!.Contains($"Errore Redis - Messaggio: {message}") &&
+                    v.ToString()!.Contains($"Tipo: {realException.GetType().FullName}") &&
+                    v.ToString()!.Contains($"Stack: {realException.StackTrace}")),
+                realException,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
         }
 
         /// <summary>
-        /// Verifica il costruttore senza logger (branch non testato)
-        /// </summary>
-        [Fact]
-        public void MinimalConstructor_ShouldSetPropertiesWithoutLogging()
-        {
-            // Arrange
-            var innerEx = new TimeoutException("Operation timed out");
-            const string message = "Timeout error";
-
-            // Act
-            var ex = new RedisCacheException(message, innerEx);
-
-            // Assert
-            Assert.Equal(message, ex.Message);
-            Assert.Same(innerEx, ex.InnerException);
-        }
-
-        /// <summary>
-        /// Verifica il comportamento con messaggio nullo (branch non testato)
+        /// Verifica il lancio di eccezione per messaggio nullo
         /// </summary>
         [Fact]
         public void Constructor_NullMessage_ShouldThrowArgumentException()
         {
             // Arrange
-            var loggerMock = new Mock<ILogger<RedisCacheException>>();
+            var loggerMock = new Mock<ILogger<RedisCacheProvider>>();
             var innerEx = new Exception("Test");
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() =>
+            var ex = Assert.Throws<ArgumentException>(() =>
                 new RedisCacheException(loggerMock.Object, null!, innerEx));
+
+            Assert.Equal("message", ex.ParamName);
+            Assert.Contains("deve contenere informazioni significative", ex.Message);
+        }
+
+        /// <summary>
+        /// Verifica il comportamento con inner exception nulla
+        /// </summary>
+        [Fact]
+        public void Constructor_NullInnerException_ShouldNotThrow()
+        {
+            // Arrange
+            var loggerMock = new Mock<ILogger<RedisCacheProvider>>();
+            const string message = "Errore generico";
+
+            // Act
+            var ex = new RedisCacheException(loggerMock.Object, message, null!);
+
+            // Assert
+            Assert.Equal(message, ex.Message);
+            Assert.Null(ex.InnerException);
+        }
+
+        /// <summary>
+        /// Verifica la creazione con costruttore semplificato
+        /// </summary>
+        [Theory]
+        [InlineData("Errore connessione")]
+        [InlineData("Errore serializzazione")]
+        public void SimpleConstructor_ShouldCreateValidException(string message)
+        {
+            // Act
+            var ex = new RedisCacheException(message);
+
+            // Assert
+            Assert.Equal(message, ex.Message);
+            Assert.Null(ex.InnerException);
+        }
+
+        /// <summary>
+        /// Verifica la generazione dello stack trace combinato
+        /// </summary>
+        [Fact]
+        public void StackTrace_ShouldCombineInnerAndOuterStacks()
+        {
+            // Arrange
+            Exception innerEx;
+            try
+            {
+                throw new InvalidOperationException("Errore interno");
+            }
+            catch (Exception ex)
+            {
+                innerEx = ex;
+            }
+            var outerEx = new RedisCacheException("Errore esterno", innerEx);
+
+            // Act
+            var fullStackTrace = outerEx.ToString();
+
+            // Assert
+            Assert.NotNull(fullStackTrace);
+            Assert.Contains("--- End of inner exception stack trace ---", fullStackTrace);
+            Assert.Contains(innerEx.StackTrace!, fullStackTrace);
         }
     }
 }

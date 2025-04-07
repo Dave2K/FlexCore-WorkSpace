@@ -1,40 +1,50 @@
-﻿using FlexCore.Caching.Common.Exceptions;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 
 namespace FlexCore.Caching.Redis
 {
     /// <summary>
-    /// Eccezione sollevata per errori specifici del provider Redis.
+    /// Eccezione specializzata per errori Redis
     /// </summary>
-    /// <remarks>
-    /// Estende <see cref="CacheException"/> per fornire contesto aggiuntivo.
-    /// </remarks>
-    public class RedisCacheException : CacheException
+    public class RedisCacheException : Exception
     {
         /// <summary>
-        /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
+        /// Inizializza una nuova istanza
         /// </summary>
-        /// <param name="logger">Logger per tracciare l'errore.</param>
-        /// <param name="message">Messaggio descrittivo dell'errore.</param>
-        /// <param name="inner">Eccezione interna originale.</param>
+        public RedisCacheException(string message, Exception inner)
+            : base(ValidateMessage(message), inner) { }
+
+        /// <summary>
+        /// Inizializza una nuova istanza con logging integrato
+        /// </summary>
         public RedisCacheException(
-            ILogger<RedisCacheException> logger,
+            ILogger<RedisCacheProvider> logger,
             string message,
-            Exception inner)
-            : base(message, inner)
+            Exception inner) : base(ValidateMessage(message), inner)
         {
-            logger.LogError(inner, "Errore Redis: {Message}", message);
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
+
+            logger.LogError(
+                "Errore Redis - Messaggio: {Message}, Tipo: {Type}, Stack: {Stack}",
+                message,
+                inner.GetType().FullName,
+                inner.StackTrace ?? "N/A");
         }
 
         /// <summary>
-        /// Inizializza una nuova istanza della classe <see cref="RedisCacheException"/>.
+        /// Inizializza una nuova istanza senza inner exception
         /// </summary>
-        /// <param name="message">Messaggio descrittivo dell'errore.</param>
-        /// <param name="inner">Eccezione interna originale.</param>
-        public RedisCacheException(string message, Exception inner)
-            : base(message, inner)
+        public RedisCacheException(string message)
+            : base(ValidateMessage(message)) { }
+
+        private static string ValidateMessage(string message)
         {
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ArgumentException(
+                    "Il messaggio deve contenere informazioni significative",
+                    nameof(message));
+
+            return message;
         }
     }
 }
